@@ -1,0 +1,268 @@
+@charset "UTF-8";
+
+:root {
+  --bg-primary: #05070d;
+  --bg-surface: #0a0e19;
+  --bg-surface-elevated: #111828;
+  --neon-cyan: #00f0ff;
+  --neon-magenta: #ff0055;
+  --neon-purple: #8b5cf6;
+  --neon-green: #00ff66;
+  --neon-yellow: #ffd700;
+  --text-primary: #f0f6fc;
+  --text-secondary: #8b9bb4;
+  --text-muted: #4b5563;
+  --border-neon: rgba(0, 240, 255, 0.4);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --glow-cyan: 0 0 15px rgba(0, 240, 255, 0.5);
+  --glow-magenta: 0 0 15px rgba(255, 0, 85, 0.5);
+  --glow-green: 0 0 15px rgba(0, 255, 102, 0.5);
+  --font-mono: 'Fira Code', 'JetBrains Mono', monospace;
+  --font-hud: 'Orbitron', -apple-system, sans-serif;
+  --font-body: 'Rajdhani', -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+  letter-spacing: 0.5px;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.07) 0%, transparent 60%),
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px, 32px 32px;
+}
+
+/* CRT Scanline Overlay */
+.scanlines-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+  z-index: 999;
+  opacity: 0.6;
+}
+
+/* Cyber Vignette */
+.cyber-vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 40%, rgba(5, 7, 13, 0.85) 100%);
+  z-index: 998;
+}
+
+/* Neo-Tech Angular Cuts */
+.neo-box {
+  background: rgba(10, 14, 25, 0.75);
+  border: 1px solid var(--border-neon);
+  box-shadow: var(--glow-cyan), inset 0 0 20px rgba(0, 240, 255, 0.05);
+  backdrop-filter: blur(12px);
+  clip-path: polygon(
+    0 8px,
+    8px 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    8px 100%,
+    0 calc(100% - 8px)
+  );
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.neo-box::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 2px;
+  background: var(--neon-cyan);
+}
+
+.neo-box::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 2px;
+  background: var(--neon-cyan);
+}
+
+.neo-box-danger {
+  border-color: var(--neon-magenta);
+  box-shadow: var(--glow-magenta), inset 0 0 20px rgba(255, 0, 85, 0.1);
+}
+
+/* Buttons */
+.neo-button {
+  background: rgba(0, 240, 255, 0.1);
+  color: var(--neon-cyan);
+  border: 1px solid var(--neon-cyan);
+  font-family: var(--font-hud);
+  font-size: 0.85rem;
+  letter-spacing: 1.5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+}
+
+.neo-button:hover:not(:disabled) {
+  background: var(--neon-cyan);
+  color: #05070d;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.8);
+  transform: translateY(-1px);
+}
+
+.neo-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+.neo-button-magenta {
+  background: rgba(255, 0, 85, 0.1);
+  color: var(--neon-magenta);
+  border-color: var(--neon-magenta);
+}
+
+.neo-button-magenta:hover:not(:disabled) {
+  background: var(--neon-magenta);
+  color: #05070d;
+  box-shadow: 0 0 20px rgba(255, 0, 85, 0.8);
+}
+
+/* Glitch Animation */
+@keyframes glitchShake {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-3px, 2px); filter: hue-rotate(90deg); }
+  40% { transform: translate(3px, -2px); }
+  60% { transform: translate(-2px, -2px); filter: hue-rotate(180deg); }
+  80% { transform: translate(2px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+
+.glitch-active {
+  animation: glitchShake 0.25s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Pulsing neon cursor */
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 8px var(--neon-cyan)); }
+  50% { opacity: 0.2; }
+}
+
+.cyber-cursor {
+  display: inline-block;
+  width: 9px;
+  height: 1.2em;
+  background-color: var(--neon-cyan);
+  vertical-align: middle;
+  animation: cursorBlink 0.8s infinite ease-in-out;
+  margin-left: 2px;
+  border-radius: 1px;
+}
+
+/* 8-Bit Spinner */
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin-slow {
+  animation: spinSlow 4s linear infinite;
+}
+
+/* Glow Texts */
+.text-glow-cyan {
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.7);
+}
+
+.text-glow-magenta {
+  color: var(--neon-magenta);
+  text-shadow: 0 0 8px rgba(255, 0, 85, 0.7);
+}
+
+.text-glow-green {
+  color: var(--neon-green);
+  text-shadow: 0 0 8px rgba(0, 255, 102, 0.7);
+}
+
+.text-glow-yellow {
+  color: var(--neon-yellow);
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
+}
+
+/* Code Highlighting in Terminal Arena */
+.token-correct {
+  color: var(--neon-green);
+  text-shadow: 0 0 6px rgba(0, 255, 102, 0.6);
+  background: rgba(0, 255, 102, 0.1);
+  border-radius: 2px;
+}
+
+.token-incorrect {
+  color: #fff;
+  background-color: rgba(255, 0, 85, 0.6);
+  text-shadow: 0 0 8px var(--neon-magenta);
+  border-radius: 2px;
+}
+
+.token-pending {
+  color: #64748b;
+  opacity: 0.7;
+}
+
+.token-current {
+  background: rgba(0, 240, 255, 0.25);
+  border-bottom: 2px solid var(--neon-cyan);
+  color: #fff;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(5, 7, 13, 0.9);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-cyan);
+}

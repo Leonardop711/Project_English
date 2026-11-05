@@ -77,7 +77,7 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                 fontWeight: 700,
               }}
             >
-              SELECTOR DE NIVELES
+              LEVEL SELECTOR
             </h2>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', marginTop: '2px' }}>
               CODERHYTHM: DON'T BREAK THE BEAT
@@ -85,7 +85,7 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            aria-label="Cerrar selector de niveles"
+            aria-label="Close level selector"
             style={{
               background: 'transparent',
               border: 'none',
@@ -210,7 +210,7 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                     fontWeight: 700,
                   }}
                 >
-                  {isCurrent ? 'ACTIVO' : isUnlocked ? 'JUGAR' : 'BLOQUEADO'}
+                  {isCurrent ? 'ACTIVE' : isUnlocked ? 'PLAY' : 'LOCKED'}
                 </div>
               </div>
             );

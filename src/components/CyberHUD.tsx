@@ -128,14 +128,14 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
                 boxShadow: isBeatBroken ? '0 0 8px #ff3366' : '0 0 8px var(--neon-green)',
               }}
             />
-            {isBeatBroken ? 'BEAT INTERRUMPIDO' : 'BEAT SINCRONIZADO'}
+            {isBeatBroken ? 'BEAT INTERRUPTED' : 'BEAT SYNCED'}
           </div>
 
           {/* Mute button */}
           <button
             onClick={onToggleMute}
-            aria-label={isMuted ? 'Activar Sonido' : 'Silenciar'}
-            title={isMuted ? 'Activar Sonido' : 'Silenciar'}
+            aria-label={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+            title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
             style={{
               background: 'rgba(5, 7, 13, 0.85)',
               border: '1px solid rgba(255, 255, 255, 0.15)',
@@ -153,7 +153,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
             }}
           >
             {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
-            {isMuted ? 'SILENCIADO' : 'SONIDO'}
+            {isMuted ? 'MUTED' : 'AUDIO ON'}
           </button>
         </div>
       </div>
@@ -179,7 +179,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
               fontWeight: 600,
             }}
           >
-            LENGUAJE:
+            LANGUAGE:
           </span>
           {languages.map((lang) => {
             const isActive = currentLanguage === lang.id;
@@ -239,7 +239,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
               transition: 'all 0.15s ease',
             }}
           >
-            CAMBIAR NIVEL
+            CHANGE LEVEL
           </button>
         </div>
 
@@ -300,7 +300,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
               }}
             >
               <Activity size={12} color="var(--neon-green)" />
-              PRECISIÓN
+              ACCURACY
             </div>
             <div
               style={{
@@ -329,7 +329,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
               }}
             >
               <ShieldAlert size={12} color={stats.stability < 30 ? '#ff3366' : 'var(--neon-cyan)'} />
-              ESTABILIDAD
+              STABILITY
             </div>
             <div
               style={{
@@ -358,7 +358,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
               }}
             >
               <Award size={12} color="var(--neon-magenta)" />
-              PUNTOS
+              SCORE
             </div>
             <div
               style={{

@@ -12,6 +12,7 @@ import { INITIAL_LEVELS } from './data/levels';
 import { Level, GameStats, Language } from './types';
 import { synthEngine } from './audio/SynthEngine';
 import { chiptunePlayer } from './audio/ChiptunePlayer';
+import { speechAnnouncer } from './audio/SpeechAnnouncer';
 
 export function App() {
   const [levels, setLevels] = useState<Level[]>(INITIAL_LEVELS);
@@ -94,6 +95,7 @@ export function App() {
     const nextMuted = !isMuted;
     setIsMuted(nextMuted);
     synthEngine.setMuted(nextMuted);
+    speechAnnouncer.setEnabled(!nextMuted);
   };
 
   // Helper: check if there is an error in current typed string
@@ -164,6 +166,7 @@ export function App() {
       // Check level completion
       if (nextInput === targetCode) {
         synthEngine.playVictoryFanfare();
+        speechAnnouncer.announceVictory();
         setStats((prev) => ({
           ...prev,
           endTime: Date.now(),
@@ -189,6 +192,7 @@ export function App() {
     } else {
       // Typo! "Don't Break the Beat"
       synthEngine.playGlitchDistortion();
+      speechAnnouncer.announceBeatBroken();
       chiptunePlayer.setCombo(0);
       setLastNote(null);
       setHasGlitch(true);

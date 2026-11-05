@@ -69,8 +69,8 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
         {onClose && (
           <button
             onClick={onClose}
-            aria-label="Cerrar y ver terminal"
-            title="Cerrar para ver la terminal y tu código"
+            aria-label="Close and view terminal"
+            title="Close to inspect terminal and code"
             style={{
               position: 'absolute',
               top: '16px',
@@ -116,7 +116,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             fontWeight: 700,
           }}
         >
-          {isPerfect ? '¡RITMO PERFECTO! // 0 ERRORES' : '¡NIVEL COMPLETADO!'}
+          {isPerfect ? 'PERFECT RHYTHM! // 0 ERRORS' : 'LEVEL COMPLETED!'}
         </h2>
         <div
           style={{
@@ -146,7 +146,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
           }}
         >
           <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <CheckCircle2 size={14} color="var(--neon-green)" /> Lo que imprimió tu programa en la terminal:
+            <CheckCircle2 size={14} color="var(--neon-green)" /> Standard Console Output (stdout):
           </div>
           <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5', fontWeight: 600 }}>{level.expectedOutput}</div>
         </div>
@@ -165,7 +165,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: 'var(--neon-cyan)', fontWeight: 700 }}>{wpm}</div>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '10px 6px', borderRadius: '4px' }}>
-            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', fontWeight: 600 }}>PRECISIÓN</div>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', fontWeight: 600 }}>ACCURACY</div>
             <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: accuracy >= 95 ? 'var(--neon-green)' : 'var(--neon-yellow)', fontWeight: 700 }}>{accuracy}%</div>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '10px 6px', borderRadius: '4px' }}>
@@ -173,7 +173,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: 'var(--neon-yellow)', fontWeight: 700 }}>{stats.maxCombo}</div>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '10px 6px', borderRadius: '4px' }}>
-            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', fontWeight: 600 }}>TIEMPO</div>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', fontWeight: 600 }}>TIME</div>
             <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: '#fff', fontWeight: 700 }}>{timeTaken}s</div>
           </div>
         </div>
@@ -200,7 +200,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
               transition: 'all 0.15s ease',
             }}
           >
-            <RotateCcw size={16} /> REPETIR
+            <RotateCcw size={16} /> RETRY
           </button>
 
           {onClose && (
@@ -224,7 +224,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
                 transition: 'all 0.15s ease',
               }}
             >
-              <Terminal size={16} /> VER TERMINAL
+              <Terminal size={16} /> VIEW TERMINAL
             </button>
           )}
 
@@ -250,7 +250,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
                 transition: 'all 0.15s ease',
               }}
             >
-              SIGUIENTE NIVEL <ArrowRight size={16} />
+              NEXT LEVEL <ArrowRight size={16} />
             </button>
           )}
         </div>

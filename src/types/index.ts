@@ -1,5 +1,11 @@
 export type Language = 'python' | 'javascript' | 'c';
 
+export interface EnglishSpotlight {
+  vocab: string;        // Target vocabulary word / technical phrasal verb
+  collocation: string;  // Natural technical collocation (e.g., 'declare a variable', 'evaluate an expression')
+  grammarTip: string;   // English Level 6 grammar breakdown (Imperatives, Conditionals, Modals, Passive voice)
+}
+
 export interface Level {
   id: number;
   language: Language;
@@ -13,6 +19,7 @@ export interface Level {
   expectedOutput: string;
   baseBpm: number;
   unlocked: boolean;
+  englishSpotlight?: EnglishSpotlight;
 }
 
 export interface GameStats {

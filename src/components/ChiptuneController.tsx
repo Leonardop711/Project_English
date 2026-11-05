@@ -133,7 +133,7 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
             }}
           >
             {isPlaying ? <Pause size={15} /> : <Play size={15} />}
-            {isPlaying ? 'PAUSAR BEAT' : 'INICIAR BEAT'}
+            {isPlaying ? 'PAUSE BEAT' : 'PLAY BEAT'}
           </button>
 
           <div
@@ -222,10 +222,10 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
               boxShadow: isCustomActive ? '0 0 10px rgba(168, 85, 247, 0.4)' : 'none',
               transition: 'all 0.15s ease',
             }}
-            title="Sube cualquier canción MP3/WAV desde tu computadora (Skrillex, Cumbias, etc.)"
+            title="Upload any MP3/WAV audio track from your computer (Skrillex, Cumbias, Lo-Fi, etc.)"
           >
             <Upload size={13} color={isCustomActive ? '#c084fc' : 'var(--text-secondary)'} />
-            <span>{isCustomActive && customAudioName ? `MP3: ${customAudioName.slice(0, 14)}...` : 'SUBIR MP3'}</span>
+            <span>{isCustomActive && customAudioName ? `MP3: ${customAudioName.slice(0, 14)}...` : 'UPLOAD MP3'}</span>
             <input
               type="file"
               accept="audio/*"
@@ -259,7 +259,7 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
                   fontWeight: 700,
                 }}
               >
-                NOTA: {lastNote.note}
+                KEY: {lastNote.note}
               </span>
             </div>
           )}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { Flame, Zap, Award, Sparkles, Music } from 'lucide-react';
+import { speechAnnouncer } from '../audio/SpeechAnnouncer';
 
 interface ComboEffectsOverlayProps {
   combo: number;
@@ -19,40 +20,40 @@ interface MilestoneData {
 const MILESTONES: Record<number, MilestoneData> = {
   5: {
     threshold: 5,
-    title: '¡RITMO ACTIVO!',
-    subtitle: '5 NOTAS PERFECTAS // LEAD SYNTH ON',
+    title: 'RHYTHM ACTIVE!',
+    subtitle: '5 PERFECT NOTES // LEAD SYNTH ON',
     color: 'var(--neon-cyan)',
     glow: '0 0 25px rgba(0, 240, 255, 0.7)',
     type: 'groove',
   },
   10: {
     threshold: 10,
-    title: '¡EN CANDELA!',
-    subtitle: '10X COMBO // ARPEGIO DESBLOQUEADO',
+    title: 'ON FIRE!',
+    subtitle: '10X COMBO // ARPEGGIO UNLOCKED',
     color: 'var(--neon-yellow)',
     glow: '0 0 30px rgba(255, 215, 0, 0.8)',
     type: 'fire',
   },
   20: {
     threshold: 20,
-    title: '¡BASS DROP!',
-    subtitle: '20X COMBO // FIEBRE TOTAL',
+    title: 'BASS DROP!',
+    subtitle: '20X COMBO // MAXIMUM FEVER',
     color: 'var(--neon-magenta)',
     glow: '0 0 35px rgba(255, 0, 85, 0.85)',
     type: 'drop',
   },
   35: {
     threshold: 35,
-    title: '¡DESCONTROL!',
-    subtitle: '35X SIN ERRORES // SPEED OVERCLOCK',
+    title: 'OVERDRIVE!',
+    subtitle: '35X FLAWLESS // SPEED OVERCLOCK',
     color: '#a855f7',
     glow: '0 0 40px rgba(168, 85, 247, 0.9)',
     type: 'overdrive',
   },
   50: {
     threshold: 50,
-    title: '¡DIOS DEL CÓDIGO!',
-    subtitle: '50X RITMO LEGENDARIO // 100% PRECISIÓN',
+    title: 'CODE DEITY!',
+    subtitle: '50X LEGENDARY RHYTHM // 100% ACCURACY',
     color: 'var(--neon-green)',
     glow: '0 0 45px rgba(0, 255, 102, 0.95)',
     type: 'god',
@@ -95,8 +96,8 @@ export const ComboEffectsOverlay: React.FC<ComboEffectsOverlayProps> = ({
       // Milestone trigger
       const milestone = MILESTONES[combo] || (combo > 50 && combo % 25 === 0 ? {
         threshold: combo,
-        title: `¡IMPARABLE ${combo}X!`,
-        subtitle: 'RACHA MAESTRA // DON\'T BREAK THE BEAT',
+        title: `UNSTOPPABLE ${combo}X!`,
+        subtitle: 'MASTER STREAK // DON\'T BREAK THE BEAT',
         color: 'var(--neon-green)',
         glow: '0 0 40px rgba(0, 255, 102, 0.9)',
         type: 'god' as const,
@@ -104,6 +105,9 @@ export const ComboEffectsOverlay: React.FC<ComboEffectsOverlayProps> = ({
 
       if (milestone) {
         setActiveMilestone(milestone);
+
+        // Vocal arcade announcement in English
+        speechAnnouncer.announceCombo(combo);
 
         // Confetti explosion
         confetti({
@@ -270,7 +274,7 @@ export const ComboEffectsOverlay: React.FC<ComboEffectsOverlayProps> = ({
                 marginTop: '4px',
               }}
             >
-              ⚡ {combo} HITS EN CADENA
+              ⚡ {combo} HITS IN A ROW
             </div>
           </div>
         </div>

@@ -275,7 +275,7 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
                 animation: 'pulse 1s infinite',
               }}
             >
-              <AlertTriangle size={13} /> ¡BEAT CORTADO! PULSA BACKSPACE
+              <AlertTriangle size={13} /> BEAT BROKEN! PRESS BACKSPACE
             </span>
           )}
 
@@ -285,7 +285,7 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
               onResetLevel();
               hiddenInputRef.current?.focus();
             }}
-            title="Reiniciar Nivel"
+            title="Reset Level"
             style={{
               background: 'transparent',
               border: 'none',
@@ -298,7 +298,7 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
               fontFamily: 'var(--font-hud)',
             }}
           >
-            <RefreshCw size={13} /> REINICIAR
+            <RefreshCw size={13} /> RESET
           </button>
         </div>
       </div>
@@ -318,7 +318,7 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
         />
       </div>
 
-      {/* Main Body with Concept Box and Code Editor */}
+      {/* Main Body with Concept Box, English Spotlight and Code Editor */}
       <div style={{ padding: '16px 20px' }}>
         {/* Educational Concept Card */}
         <div
@@ -335,15 +335,42 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: tag.color, fontWeight: 700, fontSize: '0.8rem', fontFamily: 'var(--font-hud)' }}>
-            <BookOpen size={14} /> APRENDE EL CONCEPTO
+            <BookOpen size={14} /> LEARN THE CONCEPT
           </div>
           <div style={{ color: '#e2e8f0', lineHeight: '1.45' }}>
             {currentLevel.conceptTip}
           </div>
           <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
             <Sparkles size={13} color="var(--neon-yellow)" />
-            <strong style={{ color: 'var(--neon-yellow)' }}>Sintaxis Clave:</strong> {currentLevel.syntaxGuide}
+            <strong style={{ color: 'var(--neon-yellow)' }}>Key Syntax:</strong> {currentLevel.syntaxGuide}
           </div>
+
+          {/* English Level 6 Spotlight Box */}
+          {currentLevel.englishSpotlight && (
+            <div
+              style={{
+                marginTop: '8px',
+                padding: '10px 14px',
+                background: 'rgba(139, 92, 246, 0.12)',
+                border: '1px solid rgba(139, 92, 246, 0.35)',
+                borderRadius: '4px',
+                fontSize: '0.8rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#c084fc', fontWeight: 700, fontSize: '0.75rem', fontFamily: 'var(--font-hud)' }}>
+                <BookOpen size={13} color="#c084fc" /> ENGLISH LEVEL 6 SPOTLIGHT
+              </div>
+              <div style={{ color: '#e2e8f0', fontSize: '0.78rem' }}>
+                <strong style={{ color: 'var(--neon-cyan)' }}>Target Vocabulary & Collocation:</strong> {currentLevel.englishSpotlight.vocab} — <em>"{currentLevel.englishSpotlight.collocation}"</em>
+              </div>
+              <div style={{ color: '#cbd5e1', fontSize: '0.75rem' }}>
+                <strong style={{ color: 'var(--neon-yellow)' }}>Grammar Focus:</strong> {currentLevel.englishSpotlight.grammarTip}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Code Editor Box with Line Numbers */}
@@ -410,16 +437,16 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.75rem', fontFamily: 'var(--font-hud)' }}>
               <Play size={13} color={isLevelFinished ? 'var(--neon-green)' : 'var(--neon-cyan)'} />
-              TERMINAL // SALIDA DEL COMPILADOR EN VIVO
+              TERMINAL // LIVE COMPILER OUTPUT
             </div>
             <div style={{ fontSize: '0.72rem', color: isLevelFinished ? 'var(--neon-green)' : 'var(--text-muted)' }}>
               {isLevelFinished ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--neon-green)', fontWeight: 600 }}>
-                  <CheckCircle2 size={13} /> COMPILACIÓN EXITOSA (0 ERRORS)
+                  <CheckCircle2 size={13} /> BUILD SUCCEEDED (0 ERRORS)
                 </span>
               ) : (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <Cpu size={13} /> ESPERANDO EJECUCIÓN...
+                  <Cpu size={13} /> WAITING FOR EXECUTION...
                 </span>
               )}
             </div>
@@ -466,7 +493,7 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--neon-cyan)', fontWeight: 700, marginBottom: '4px', fontFamily: 'var(--font-hud)', fontSize: '0.75rem' }}>
-                  <Lightbulb size={14} color="var(--neon-cyan)" /> ¿QUÉ ACABA DE PASAR EN TU CÓDIGO?
+                  <Lightbulb size={14} color="var(--neon-cyan)" /> WHAT JUST HAPPENED IN YOUR CODE?
                 </div>
                 <div>{currentLevel.conceptTip}</div>
               </div>
@@ -503,7 +530,7 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
                       transition: 'all 0.15s ease',
                     }}
                   >
-                    SIGUIENTE NIVEL <ArrowRight size={14} />
+                    NEXT LEVEL <ArrowRight size={14} />
                   </button>
                 )}
 
@@ -529,7 +556,7 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
                       transition: 'all 0.15s ease',
                     }}
                   >
-                    <BarChart2 size={14} /> VER ESTADÍSTICAS DEL BEAT
+                    <BarChart2 size={14} /> VIEW BEAT STATS
                   </button>
                 )}
 
@@ -552,13 +579,13 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
                     gap: '4px',
                   }}
                 >
-                  <RefreshCw size={12} /> REPETIR
+                  <RefreshCw size={12} /> RETRY
                 </button>
               </div>
             </div>
           ) : (
             <div style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '6px 0' }}>
-              Escribe el código sin romper el beat para compilarlo en tiempo real aquí.
+              Type the code without breaking the beat to execute and compile live output here.
             </div>
           )}
         </div>
@@ -576,10 +603,10 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
           }}
         >
           <span>
-            💡 <strong style={{ color: 'var(--neon-cyan)' }}>Nota por tecla:</strong> Cada letra, símbolo y espacio tiene su propia nota musical afinada.
+            💡 <strong style={{ color: 'var(--neon-cyan)' }}>Key Synthesizer:</strong> Every letter, symbol, and space triggers its own tuned acoustic pitch.
           </span>
           <span>
-            Progreso: {Math.min(userInput.length, targetCode.length)} / {targetCode.length} ({progressPercent}%)
+            Progress: {Math.min(userInput.length, targetCode.length)} / {targetCode.length} ({progressPercent}%)
           </span>
         </div>
       </div>

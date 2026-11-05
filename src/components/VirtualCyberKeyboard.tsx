@@ -58,11 +58,11 @@ export const VirtualCyberKeyboard: React.FC<VirtualCyberKeyboardProps> = ({
               letterSpacing: '1px',
             }}
           >
-            SINTETIZADOR DE MACROS ({language.toUpperCase()})
+            MACRO SYNTHESIZER ({language.toUpperCase()})
           </span>
         </div>
         <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)' }}>
-          CADA TECLA TIENE SU NOTA Y TIMBRE PROPIO
+          EVERY KEY HAS ITS OWN UNIQUE NOTE & TIMBRE
         </span>
       </div>
 
@@ -139,7 +139,7 @@ export const VirtualCyberKeyboard: React.FC<VirtualCyberKeyboardProps> = ({
           onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.95)')}
           onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         >
-          <Delete size={14} /> BORRAR (BACKSPACE)
+          <Delete size={14} /> DELETE (BACKSPACE)
         </button>
 
         <button
@@ -162,7 +162,7 @@ export const VirtualCyberKeyboard: React.FC<VirtualCyberKeyboardProps> = ({
           onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.95)')}
           onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         >
-          <CornerDownLeft size={14} /> SALTO DE LÍNEA (ENTER)
+          <CornerDownLeft size={14} /> LINE BREAK (ENTER)
         </button>
       </div>
     </div>

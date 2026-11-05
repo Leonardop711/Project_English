@@ -20,7 +20,7 @@ export const VirtualCyberKeyboard: React.FC<VirtualCyberKeyboardProps> = ({
       case 'python':
         return ['print', 'score', 'lives', 'if', 'for', 'in', 'range', 'def', ':', '(', ')', '"', '=', '-', '>', ' '];
       case 'javascript':
-        return ['console.log', 'const', 'let', 'if', '=>', 'health', 'bpm', ';', '{', '}', '(', ')', '"', '===', ' '];
+        return ['console.log', 'const', 'let', 'if', '=>', '¡', '!', 'health', 'bpm', ';', '{', '}', '(', ')', '"', '===', ' '];
       case 'c':
         return ['printf', 'int', 'float', 'for', 'if', 'bpm', 'volume', ';', '{', '}', '(', ')', '\\n', '+=', ' '];
       default:

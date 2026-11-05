@@ -97,6 +97,8 @@ export const KEY_SOUND_MAP: Record<string, KeySoundProfile> = {
   '.': { note: 'A6', freq: 1760.00, wave: 'sine', filterFreq: 7000, decay: 0.045, volume: 0.32, type: 'percussion' },
   ',': { note: 'F6', freq: 1396.91, wave: 'sine', filterFreq: 6500, decay: 0.045, volume: 0.32, type: 'percussion' },
   '!': { note: 'D6', freq: 1174.66, wave: 'sawtooth', filterFreq: 6000, decay: 0.07, volume: 0.38, type: 'syntax' },
+  '¡': { note: 'D6', freq: 1174.66, wave: 'sawtooth', filterFreq: 6200, decay: 0.07, volume: 0.38, type: 'syntax' },
+  '¿': { note: 'C6', freq: 1046.50, wave: 'sawtooth', filterFreq: 5800, decay: 0.07, volume: 0.38, type: 'syntax' },
   '#': { note: 'G4', freq: 392.00, wave: 'triangle', filterFreq: 3500, decay: 0.065, volume: 0.36, type: 'syntax' },
   '_': { note: 'F2', freq: 87.31, wave: 'triangle', filterFreq: 400, decay: 0.08, volume: 0.38, type: 'bass' },
 };

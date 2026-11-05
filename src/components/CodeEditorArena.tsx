@@ -53,7 +53,11 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
       return;
     }
 
-    if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    const isAltGraph = typeof e.getModifierState === 'function' && e.getModifierState('AltGraph');
+    const isCtrlBlocked = e.ctrlKey && !isAltGraph;
+
+    // Single character input - allow Option (altKey) on Mac for symbols like ¡, ¿, ~, etc.
+    if (e.key.length === 1 && !isCtrlBlocked && !e.metaKey) {
       e.preventDefault();
       onKeyPress(e.key);
     }
@@ -180,6 +184,15 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
         type="text"
         autoFocus
         tabIndex={0}
+        value=""
+        onChange={(e) => {
+          const val = e.target.value;
+          if (val) {
+            for (const ch of val) {
+              onKeyPress(ch);
+            }
+          }
+        }}
         onKeyDown={handleKeyDown}
         style={{
           position: 'absolute',

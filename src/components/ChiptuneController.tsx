@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, Music2, Volume2, Disc } from 'lucide-react';
+import { Play, Pause, Music2, Volume2, Disc, Upload, Radio } from 'lucide-react';
 import { chiptunePlayer } from '../audio/ChiptunePlayer';
 import { CHIPTUNE_TRACKS, ChiptuneTrack } from '../audio/ChiptuneTracks';
 
@@ -15,11 +15,15 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
   const [isPlaying, setIsPlaying] = useState<boolean>(chiptunePlayer.getIsPlaying());
   const [currentTrack, setCurrentTrack] = useState<ChiptuneTrack>(chiptunePlayer.getCurrentTrack());
   const [volume, setVolume] = useState<number>(chiptunePlayer.getVolume());
+  const [isCustomActive, setIsCustomActive] = useState<boolean>(chiptunePlayer.isCustomActive());
+  const [customAudioName, setCustomAudioName] = useState<string | null>(chiptunePlayer.getCustomAudioName());
 
   useEffect(() => {
     const checkState = () => {
       setIsPlaying(chiptunePlayer.getIsPlaying());
       setCurrentTrack(chiptunePlayer.getCurrentTrack());
+      setIsCustomActive(chiptunePlayer.isCustomActive());
+      setCustomAudioName(chiptunePlayer.getCustomAudioName());
     };
     checkState();
     const interval = setInterval(checkState, 300);
@@ -36,9 +40,24 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
     const found = CHIPTUNE_TRACKS.find((t) => t.id === trackId);
     if (found) {
       setCurrentTrack(found);
+      setIsCustomActive(false);
       if (!isPlaying) {
         chiptunePlayer.start();
         setIsPlaying(true);
+      }
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const name = await chiptunePlayer.loadCustomAudio(file);
+        setCustomAudioName(name);
+        setIsCustomActive(true);
+        setIsPlaying(true);
+      } catch (err) {
+        console.error('Error cargando archivo de audio:', err);
       }
     }
   };
@@ -47,6 +66,23 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
     const val = parseFloat(e.target.value);
     setVolume(val);
     chiptunePlayer.setVolume(val);
+  };
+
+  const getGenreEmoji = (genre: ChiptuneTrack['genre']) => {
+    switch (genre) {
+      case 'cumbia':
+        return '🌴 CUMBIA';
+      case 'dubstep':
+        return '⚡ SKRILLEX';
+      case 'phonk':
+        return '🏎️ PHONK';
+      case 'lofi':
+        return '☕ LO-FI';
+      case 'synthwave':
+        return '🌆 SYNTH';
+      default:
+        return '🎵 BEAT';
+    }
   };
 
   return (
@@ -74,7 +110,7 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
           gap: '12px',
         }}
       >
-        {/* Play/Pause Button & BPM */}
+        {/* Play/Pause Button & BPM Indicator */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             onClick={handleTogglePlay}
@@ -127,22 +163,24 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
                 fontWeight: 700,
               }}
             >
-              {currentTrack.bpm} BPM
+              {isCustomActive ? 'CUSTOM MP3' : `${currentTrack.bpm} BPM`}
             </span>
           </div>
         </div>
 
-        {/* Track Selector Cards */}
+        {/* Track Selector & MP3 Upload */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)' }}>
-            BEATS:
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Radio size={13} color="var(--neon-cyan)" /> BEATS:
           </span>
+
           {CHIPTUNE_TRACKS.map((track) => {
-            const isSelected = track.id === currentTrack.id;
+            const isSelected = !isCustomActive && track.id === currentTrack.id;
             return (
               <button
                 key={track.id}
                 onClick={() => handleSelectTrack(track.id)}
+                title={track.description}
                 style={{
                   background: isSelected ? 'rgba(0, 255, 163, 0.2)' : 'rgba(0, 0, 0, 0.4)',
                   border: isSelected
@@ -150,7 +188,7 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
                     : '1px solid rgba(255, 255, 255, 0.12)',
                   color: isSelected ? 'var(--neon-green)' : 'var(--text-secondary)',
                   fontFamily: 'var(--font-hud)',
-                  fontSize: '0.7rem',
+                  fontSize: '0.72rem',
                   padding: '6px 12px',
                   borderRadius: '3px',
                   cursor: 'pointer',
@@ -160,10 +198,41 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
                   transition: 'all 0.15s ease',
                 }}
               >
-                {track.title.split('(')[0].trim()}
+                {getGenreEmoji(track.genre)}
               </button>
             );
           })}
+
+          {/* Custom MP3 File Selector */}
+          <label
+            style={{
+              background: isCustomActive ? 'rgba(168, 85, 247, 0.25)' : 'rgba(0, 0, 0, 0.4)',
+              border: isCustomActive
+                ? '1px solid #a855f7'
+                : '1px dashed rgba(255, 255, 255, 0.25)',
+              color: isCustomActive ? '#c084fc' : 'var(--text-secondary)',
+              fontFamily: 'var(--font-hud)',
+              fontSize: '0.72rem',
+              padding: '6px 12px',
+              borderRadius: '3px',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: isCustomActive ? '0 0 10px rgba(168, 85, 247, 0.4)' : 'none',
+              transition: 'all 0.15s ease',
+            }}
+            title="Sube cualquier canción MP3/WAV desde tu computadora (Skrillex, Cumbias, etc.)"
+          >
+            <Upload size={13} color={isCustomActive ? '#c084fc' : 'var(--text-secondary)'} />
+            <span>{isCustomActive && customAudioName ? `MP3: ${customAudioName.slice(0, 14)}...` : 'SUBIR MP3'}</span>
+            <input
+              type="file"
+              accept="audio/*"
+              style={{ display: 'none' }}
+              onChange={handleFileUpload}
+            />
+          </label>
         </div>
 
         {/* Live Note & Volume Control */}

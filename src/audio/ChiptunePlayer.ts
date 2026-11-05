@@ -18,10 +18,18 @@ export class ChiptunePlayer {
   private timerId: number | null = null;
   private combo: number = 0;
 
+  // Custom audio playback (MP3/WAV file support)
+  private customAudioBuffer: AudioBuffer | null = null;
+  private customAudioSource: AudioBufferSourceNode | null = null;
+  private customAudioStartTime: number = 0;
+  private customAudioPauseOffset: number = 0;
+  private customAudioName: string | null = null;
+  private isCustomAudioActive: boolean = false;
+
   // Listeners for UI sync
   private beatStatusListeners: Set<BeatStatusCallback> = new Set();
 
-  // Noise buffer for 8-bit drums
+  // Noise buffer for drums & percussions
   private noiseBuffer: AudioBuffer | null = null;
 
   constructor() {}
@@ -68,7 +76,18 @@ export class ChiptunePlayer {
     return this.currentTrack;
   }
 
+  public isCustomActive(): boolean {
+    return this.isCustomAudioActive;
+  }
+
+  public getCustomAudioName(): string | null {
+    return this.customAudioName;
+  }
+
   public setTrack(trackId: string) {
+    this.isCustomAudioActive = false;
+    this.stopCustomSource();
+
     const found = CHIPTUNE_TRACKS.find((t) => t.id === trackId);
     if (found) {
       this.currentTrack = found;
@@ -77,6 +96,32 @@ export class ChiptunePlayer {
         this.nextStepTime = this.ctx.currentTime + 0.05;
       }
     }
+  }
+
+  public async loadCustomAudio(file: File): Promise<string> {
+    if (!this.ctx) {
+      const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      this.ctx = new AudioCtxClass();
+      if (!this.bgmGain) {
+        this.bgmGain = this.ctx.createGain();
+        this.bgmGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
+        this.bgmGain.connect(this.ctx.destination);
+      }
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const audioBuffer = await this.ctx.decodeAudioData(arrayBuffer);
+    this.customAudioBuffer = audioBuffer;
+    this.customAudioName = file.name.replace(/\.[^/.]+$/, '');
+    this.isCustomAudioActive = true;
+    this.customAudioPauseOffset = 0;
+
+    if (this.isPlaying) {
+      this.stop();
+      this.start();
+    }
+
+    return this.customAudioName;
   }
 
   public setCombo(combo: number) {
@@ -117,10 +162,16 @@ export class ChiptunePlayer {
     this.isPlaying = true;
     this.isBeatCut = false;
     this.notifyBeatStatus();
-    this.currentStep = 0;
-    this.nextStepTime = this.ctx.currentTime + 0.1;
+
     this.bgmGain.gain.setTargetAtTime(this.isMuted ? 0 : this.volume, this.ctx.currentTime, 0.05);
-    this.scheduler();
+
+    if (this.isCustomAudioActive && this.customAudioBuffer) {
+      this.playCustomSource(this.customAudioPauseOffset);
+    } else {
+      this.currentStep = 0;
+      this.nextStepTime = this.ctx.currentTime + 0.1;
+      this.scheduler();
+    }
   }
 
   public stop() {
@@ -129,6 +180,7 @@ export class ChiptunePlayer {
       window.clearTimeout(this.timerId);
       this.timerId = null;
     }
+    this.stopCustomSource();
   }
 
   public togglePlay(): boolean {
@@ -141,9 +193,36 @@ export class ChiptunePlayer {
     }
   }
 
+  private playCustomSource(offsetSeconds = 0) {
+    if (!this.ctx || !this.bgmGain || !this.customAudioBuffer) return;
+    this.stopCustomSource();
+
+    const source = this.ctx.createBufferSource();
+    source.buffer = this.customAudioBuffer;
+    source.loop = true;
+    source.connect(this.bgmGain);
+
+    const safeOffset = offsetSeconds % this.customAudioBuffer.duration;
+    source.start(0, safeOffset);
+    this.customAudioStartTime = this.ctx.currentTime - safeOffset;
+    this.customAudioSource = source;
+  }
+
+  private stopCustomSource() {
+    if (this.customAudioSource) {
+      try {
+        this.customAudioSource.stop();
+        this.customAudioSource.disconnect();
+      } catch {
+        // ignore if already stopped
+      }
+      this.customAudioSource = null;
+    }
+  }
+
   /**
    * "Don't Break the Beat" Mechanic:
-   * Instantly decelerates pitch and kills gain on typo with a tape-stop sound.
+   * Instantly cuts gain and plays tape-stop needle scratch.
    */
   public triggerTapeStop() {
     if (!this.ctx || !this.bgmGain) return;
@@ -157,11 +236,18 @@ export class ChiptunePlayer {
     this.bgmGain.gain.setValueAtTime(this.bgmGain.gain.value, now);
     this.bgmGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
 
+    if (this.isCustomAudioActive && this.customAudioSource) {
+      if (this.customAudioBuffer) {
+        this.customAudioPauseOffset = (now - this.customAudioStartTime) % this.customAudioBuffer.duration;
+      }
+      this.stopCustomSource();
+    }
+
     // 2. Play Tape-Stop / Vinyl Scratch effect
     const osc = this.ctx.createOscillator();
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(380, now);
-    osc.frequency.exponentialRampToValueAtTime(40, now + 0.22); // Rapid deceleration
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.22); // Rapid pitch drop
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'lowpass';
@@ -183,7 +269,7 @@ export class ChiptunePlayer {
   }
 
   /**
-   * Resume the beat when error is corrected or player continues typing cleanly
+   * Resume the beat when error is fixed with Backspace
    */
   public resumeBeat() {
     if (!this.ctx || !this.bgmGain) return;
@@ -202,8 +288,12 @@ export class ChiptunePlayer {
       this.bgmGain.gain.setValueAtTime(0.001, now);
       this.bgmGain.gain.linearRampToValueAtTime(this.isMuted ? 0 : this.volume, now + 0.05);
 
-      // Play snappy kick pickup
-      this.playDrum('K', now);
+      if (this.isCustomAudioActive && this.customAudioBuffer) {
+        this.playCustomSource(this.customAudioPauseOffset);
+      } else {
+        // Play snappy kick pickup
+        this.playDrum('K', now);
+      }
     }
   }
 
@@ -212,12 +302,11 @@ export class ChiptunePlayer {
   }
 
   /**
-   * Rock-solid Web Audio step scheduler with lookahead
+   * Step scheduler for procedural multi-track synths
    */
   private scheduler = () => {
-    if (!this.isPlaying || !this.ctx) return;
+    if (!this.isPlaying || !this.ctx || this.isCustomAudioActive) return;
 
-    // If beat is broken, don't play sound steps, but advance timer so we resume seamlessly
     const lookahead = 0.1;
     while (this.nextStepTime < this.ctx.currentTime + lookahead) {
       if (!this.isBeatCut) {
@@ -243,7 +332,7 @@ export class ChiptunePlayer {
     const secondsPerBeat = 60.0 / track.bpm;
     const stepDuration = secondsPerBeat / 4;
 
-    // 1. Channel 4: Drums
+    // 1. Channel 4: Percussion & Drums (Güiro, Cowbell, Congas, Kick, Snare, Hihat)
     const drumToken = track.drums[step % track.drums.length];
     if (drumToken && drumToken !== '-') {
       this.playDrum(drumToken, time);
@@ -255,7 +344,7 @@ export class ChiptunePlayer {
       this.playBassNote(bassNote, time, stepDuration * 0.95);
     }
 
-    // 3. Channel 1: Square Lead (combo >= 5)
+    // 3. Channel 1: Lead Melody (unlocked on combo >= 5)
     if (this.combo >= 5) {
       const leadNote = track.lead[step % track.lead.length];
       if (leadNote && leadNote !== '-') {
@@ -263,7 +352,7 @@ export class ChiptunePlayer {
       }
     }
 
-    // 4. Channel 2: Arpeggio (combo >= 10)
+    // 4. Channel 2: Arpeggio (unlocked on combo >= 10)
     if (this.combo >= 10) {
       const arpNote = track.arp[step % track.arp.length];
       if (arpNote && arpNote !== '-') {
@@ -277,13 +366,89 @@ export class ChiptunePlayer {
     const freq = NOTE_FREQS[note];
     if (!freq) return;
 
+    // Cumbia: Tropical Accordion / Organ with chorus vibrato
+    if (this.currentTrack.genre === 'cumbia') {
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      osc1.type = 'sawtooth';
+      osc2.type = 'triangle';
+      osc1.frequency.setValueAtTime(freq, time);
+      osc2.frequency.setValueAtTime(freq * 1.007, time); // detuned chorus
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2400, time);
+
+      const gain = this.ctx.createGain();
+      const vol = this.combo >= 20 ? 0.22 : 0.17;
+      gain.gain.setValueAtTime(vol, time);
+      gain.gain.setValueAtTime(vol, time + duration * 0.7);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.bgmGain);
+
+      osc1.start(time);
+      osc2.start(time);
+      osc1.stop(time + duration);
+      osc2.stop(time + duration);
+      return;
+    }
+
+    // Phonk: 808 Cowbell Lead
+    if (this.currentTrack.genre === 'phonk') {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, time);
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(freq * 1.15, time);
+      filter.Q.setValueAtTime(4, time);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.24, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + duration * 0.7);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.bgmGain);
+
+      osc.start(time);
+      osc.stop(time + duration);
+      return;
+    }
+
+    // Dubstep: Complextro lead screech
+    if (this.currentTrack.genre === 'dubstep') {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, time);
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(freq * 1.6, time);
+      filter.Q.setValueAtTime(6, time);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.24, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.bgmGain);
+
+      osc.start(time);
+      osc.stop(time + duration);
+      return;
+    }
+
+    // Default square lead
     const osc = this.ctx.createOscillator();
     osc.type = 'square';
     osc.frequency.setValueAtTime(freq, time);
-
-    if (this.combo >= 20) {
-      osc.frequency.setValueAtTime(freq * 1.005, time + duration * 0.5);
-    }
 
     const gain = this.ctx.createGain();
     const leadVol = this.combo >= 20 ? 0.22 : 0.16;
@@ -304,11 +469,11 @@ export class ChiptunePlayer {
     if (!freq) return;
 
     const osc = this.ctx.createOscillator();
-    osc.type = 'square';
+    osc.type = this.currentTrack.genre === 'lofi' ? 'sine' : 'square';
     osc.frequency.setValueAtTime(freq, time);
 
     const gain = this.ctx.createGain();
-    const arpVol = 0.09;
+    const arpVol = 0.1;
     gain.gain.setValueAtTime(arpVol, time);
     gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
 
@@ -324,12 +489,75 @@ export class ChiptunePlayer {
     const freq = NOTE_FREQS[note];
     if (!freq) return;
 
+    // SKRILLEX DUBSTEP: Heavy Wobble Growl Bass ("wub-wub")
+    if (this.currentTrack.genre === 'dubstep') {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, time);
+
+      // Wobble sweep filter
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.Q.setValueAtTime(8, time);
+      filter.frequency.setValueAtTime(3200, time);
+      filter.frequency.exponentialRampToValueAtTime(160, time + duration * 0.75);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.4, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+      // Chest-thumping sub-bass layer (40-60 Hz)
+      const subOsc = this.ctx.createOscillator();
+      subOsc.type = 'sine';
+      subOsc.frequency.setValueAtTime(Math.max(42, freq * 0.5), time);
+      const subGain = this.ctx.createGain();
+      subGain.gain.setValueAtTime(0.38, time);
+      subGain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.bgmGain);
+
+      subOsc.connect(subGain);
+      subGain.connect(this.bgmGain);
+
+      osc.start(time);
+      subOsc.start(time);
+      osc.stop(time + duration);
+      subOsc.stop(time + duration);
+      return;
+    }
+
+    // CUMBIA: Bouncing round Latin Bass
+    if (this.currentTrack.genre === 'cumbia') {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, time);
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(500, time);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.38, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + duration * 0.85);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.bgmGain);
+
+      osc.start(time);
+      osc.stop(time + duration);
+      return;
+    }
+
+    // Default bass
     const osc = this.ctx.createOscillator();
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(freq, time);
 
     const gain = this.ctx.createGain();
-    const bassVol = 0.25;
+    const bassVol = 0.28;
     gain.gain.setValueAtTime(bassVol, time);
     gain.gain.setValueAtTime(bassVol, time + duration * 0.8);
     gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
@@ -345,13 +573,14 @@ export class ChiptunePlayer {
     if (!this.ctx || !this.bgmGain) return;
 
     if (token === 'K') {
+      // Kick drum
       const osc = this.ctx.createOscillator();
       osc.type = 'square';
       osc.frequency.setValueAtTime(140, time);
       osc.frequency.exponentialRampToValueAtTime(35, time + 0.08);
 
       const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(0.35, time);
+      gain.gain.setValueAtTime(0.38, time);
       gain.gain.exponentialRampToValueAtTime(0.001, time + 0.09);
 
       osc.connect(gain);
@@ -360,6 +589,7 @@ export class ChiptunePlayer {
       osc.start(time);
       osc.stop(time + 0.1);
     } else if (token === 'S') {
+      // Snare drum
       if (!this.noiseBuffer) return;
 
       const noiseSource = this.ctx.createBufferSource();
@@ -367,20 +597,21 @@ export class ChiptunePlayer {
 
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(1400, time);
-      filter.Q.setValueAtTime(3, time);
+      filter.frequency.setValueAtTime(this.currentTrack.genre === 'dubstep' ? 1800 : 1400, time);
+      filter.Q.setValueAtTime(this.currentTrack.genre === 'dubstep' ? 4 : 3, time);
 
       const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(0.28, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+      gain.gain.setValueAtTime(this.currentTrack.genre === 'dubstep' ? 0.38 : 0.28, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + (this.currentTrack.genre === 'dubstep' ? 0.16 : 0.12));
 
       noiseSource.connect(filter);
       filter.connect(gain);
       gain.connect(this.bgmGain);
 
       noiseSource.start(time);
-      noiseSource.stop(time + 0.13);
+      noiseSource.stop(time + 0.18);
     } else if (token === 'H') {
+      // Closed Hi-hat
       if (!this.noiseBuffer) return;
 
       const noiseSource = this.ctx.createBufferSource();
@@ -400,7 +631,97 @@ export class ChiptunePlayer {
 
       noiseSource.start(time);
       noiseSource.stop(time + 0.05);
+    } else if (token === 'G') {
+      // Güiro Short scrape ("chi")
+      if (!this.noiseBuffer) return;
+
+      const noiseSource = this.ctx.createBufferSource();
+      noiseSource.buffer = this.noiseBuffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(4200, time);
+      filter.Q.setValueAtTime(5, time);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.26, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.035);
+
+      noiseSource.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.bgmGain);
+
+      noiseSource.start(time);
+      noiseSource.stop(time + 0.04);
+    } else if (token === 'W') {
+      // Güiro Long scrape ("chá")
+      if (!this.noiseBuffer) return;
+
+      const noiseSource = this.ctx.createBufferSource();
+      noiseSource.buffer = this.noiseBuffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(3200, time);
+      filter.frequency.exponentialRampToValueAtTime(5200, time + 0.07);
+      filter.Q.setValueAtTime(4, time);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.06, time);
+      gain.gain.linearRampToValueAtTime(0.3, time + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+
+      noiseSource.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.bgmGain);
+
+      noiseSource.start(time);
+      noiseSource.stop(time + 0.09);
+    } else if (token === 'C') {
+      // Conga / Timbal slap
+      const osc = this.ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(350, time);
+      osc.frequency.exponentialRampToValueAtTime(170, time + 0.07);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.34, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+
+      osc.connect(gain);
+      gain.connect(this.bgmGain);
+
+      osc.start(time);
+      osc.stop(time + 0.09);
+    } else if (token === 'B') {
+      // 808 Metallic Cowbell
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      osc1.type = 'square';
+      osc2.type = 'square';
+      osc1.frequency.setValueAtTime(540, time);
+      osc2.frequency.setValueAtTime(800, time);
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(840, time);
+      filter.Q.setValueAtTime(3.5, time);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.32, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.09);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.bgmGain);
+
+      osc1.start(time);
+      osc2.start(time);
+      osc1.stop(time + 0.1);
+      osc2.stop(time + 0.1);
     } else if (token === 'O') {
+      // Open hi-hat
       if (!this.noiseBuffer) return;
 
       const noiseSource = this.ctx.createBufferSource();

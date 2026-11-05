@@ -7,6 +7,7 @@ import { VictoryModal } from './components/VictoryModal';
 import { LevelSelectorModal } from './components/LevelSelectorModal';
 import { ChiptuneController } from './components/ChiptuneController';
 import { GeometryDashBackground } from './components/GeometryDashBackground';
+import { ComboEffectsOverlay } from './components/ComboEffectsOverlay';
 import { INITIAL_LEVELS } from './data/levels';
 import { Level, GameStats, Language } from './types';
 import { synthEngine } from './audio/SynthEngine';
@@ -56,6 +57,7 @@ export function App() {
     setHasGlitch(false);
     setIsVictoryModalOpen(false);
     setLastNote(null);
+    chiptunePlayer.setCombo(0);
     chiptunePlayer.resumeBeat();
     setStats((prev) => ({
       ...prev,
@@ -138,6 +140,7 @@ export function App() {
     if (char === expectedChar) {
       // Correct keystroke!
       const newCombo = stats.combo + 1;
+      chiptunePlayer.setCombo(newCombo);
       const multiplier = newCombo >= 20 ? 4 : newCombo >= 10 ? 2 : newCombo >= 5 ? 1.5 : 1;
       const scoreGain = Math.round(10 * multiplier);
 
@@ -186,6 +189,7 @@ export function App() {
     } else {
       // Typo! "Don't Break the Beat"
       synthEngine.playGlitchDistortion();
+      chiptunePlayer.setCombo(0);
       setLastNote(null);
       setHasGlitch(true);
       setTimeout(() => setHasGlitch(false), 250);
@@ -262,6 +266,12 @@ export function App() {
         combo={stats.combo}
         isBeatBroken={isBeatBroken}
         hasGlitch={hasGlitch}
+      />
+
+      {/* Dynamic Arcade Combo Animations & Shockwaves */}
+      <ComboEffectsOverlay
+        combo={stats.combo}
+        isBeatBroken={isBeatBroken}
       />
 
       {/* CRT Scanline & Ambient Filter Layers */}

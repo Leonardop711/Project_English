@@ -7,22 +7,21 @@ import { VictoryModal } from './components/VictoryModal';
 import { LevelSelectorModal } from './components/LevelSelectorModal';
 import { ChiptuneController } from './components/ChiptuneController';
 import { INITIAL_LEVELS } from './data/levels';
-import { Level, GameStats } from './types';
+import { Level, GameStats, Language } from './types';
 import { synthEngine } from './audio/SynthEngine';
 import { chiptunePlayer } from './audio/ChiptunePlayer';
-import { CHIPTUNE_TRACKS } from './audio/ChiptuneTracks';
-import { SYNCED_MELODIES, SyncedMelody, SyncedNote } from './audio/SyncedMelodies';
 
 export function App() {
   const [levels, setLevels] = useState<Level[]>(INITIAL_LEVELS);
+  const [currentLanguage, setCurrentLanguage] = useState<Language>('python');
   const [currentLevelId, setCurrentLevelId] = useState<number>(1);
   const [userInput, setUserInput] = useState<string>('');
   const [hasGlitch, setHasGlitch] = useState<boolean>(false);
+  const [isBeatBroken, setIsBeatBroken] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isLevelSelectorOpen, setIsLevelSelectorOpen] = useState<boolean>(false);
   const [isVictoryModalOpen, setIsVictoryModalOpen] = useState<boolean>(false);
-  const [activeMelody, setActiveMelody] = useState<SyncedMelody>(SYNCED_MELODIES[0]);
-  const [lastNote, setLastNote] = useState<SyncedNote | null>(null);
+  const [lastNote, setLastNote] = useState<{ note: string; label?: string } | null>(null);
 
   const [stats, setStats] = useState<GameStats>({
     score: 0,
@@ -38,12 +37,20 @@ export function App() {
 
   const currentLevel = levels.find((l) => l.id === currentLevelId) || levels[0];
 
+  // Subscribe to beat status changes
+  useEffect(() => {
+    return chiptunePlayer.subscribeBeatStatus((isBroken) => {
+      setIsBeatBroken(isBroken);
+    });
+  }, []);
+
   // Reset inputs when switching level
   const resetLevel = useCallback(() => {
     setUserInput('');
     setHasGlitch(false);
     setIsVictoryModalOpen(false);
     setLastNote(null);
+    chiptunePlayer.resumeBeat();
     setStats((prev) => ({
       ...prev,
       combo: 0,
@@ -57,10 +64,21 @@ export function App() {
   }, []);
 
   const handleSelectLevel = (levelId: number) => {
-    setCurrentLevelId(levelId);
-    const trackIndex = (levelId - 1) % CHIPTUNE_TRACKS.length;
-    chiptunePlayer.setTrack(CHIPTUNE_TRACKS[trackIndex].id);
-    resetLevel();
+    const targetLevel = levels.find((l) => l.id === levelId);
+    if (targetLevel) {
+      setCurrentLanguage(targetLevel.language);
+      setCurrentLevelId(levelId);
+      resetLevel();
+    }
+  };
+
+  const handleSelectLanguage = (lang: Language) => {
+    setCurrentLanguage(lang);
+    const firstLevelForLang = levels.find((l) => l.language === lang);
+    if (firstLevelForLang) {
+      setCurrentLevelId(firstLevelForLang.id);
+      resetLevel();
+    }
   };
 
   // Toggle Mute
@@ -70,32 +88,54 @@ export function App() {
     synthEngine.setMuted(nextMuted);
   };
 
+  // Helper: check if there is an error in current typed string
+  const checkHasError = (input: string, target: string) => {
+    for (let i = 0; i < input.length; i++) {
+      if (input[i] !== target[i]) return true;
+    }
+    return false;
+  };
+
   // Handle Keystrokes
   const handleKeyPress = (char: string) => {
     if (isVictoryModalOpen) return;
 
-    // Start timer on first keystroke
+    // Start timer & ensure synth is initialized
     const now = Date.now();
     let startTime = stats.startTime;
     if (!startTime) {
       startTime = now;
+      synthEngine.init();
+      if (!chiptunePlayer.getIsPlaying()) {
+        chiptunePlayer.start();
+      }
+    }
+
+    const targetCode = currentLevel.code;
+
+    // If already typed full length and correct, do nothing
+    if (userInput.length >= targetCode.length && !checkHasError(userInput, targetCode)) {
+      return;
+    }
+
+    // If an error already exists, require Backspace to fix it
+    if (checkHasError(userInput, targetCode)) {
+      synthEngine.playGlitchDistortion();
+      setHasGlitch(true);
+      setTimeout(() => setHasGlitch(false), 200);
+      return;
     }
 
     const currentIndex = userInput.length;
-    const targetCode = currentLevel.code;
-
-    // Check if level is already full
-    if (currentIndex >= targetCode.length) return;
-
     const expectedChar = targetCode[currentIndex];
 
     if (char === expectedChar) {
-      // Correct keystroke: play synchronized note from the 8-bit song!
+      // Correct keystroke!
       const newCombo = stats.combo + 1;
       const multiplier = newCombo >= 20 ? 4 : newCombo >= 10 ? 2 : newCombo >= 5 ? 1.5 : 1;
       const scoreGain = Math.round(10 * multiplier);
 
-      // Play the exact note of Bangarang / active melody
+      // Play synchronized harmonic note
       const playedNote = synthEngine.playSyncedKeySound(currentIndex, newCombo);
       setLastNote(playedNote);
 
@@ -113,15 +153,14 @@ export function App() {
       }));
 
       // Check level completion
-      if (nextInput.length === targetCode.length) {
-        // Victory!
+      if (nextInput === targetCode) {
         synthEngine.playVictoryFanfare();
         setStats((prev) => ({
           ...prev,
           endTime: Date.now(),
         }));
 
-        // Unlock next level
+        // Unlock next level in current language track
         setLevels((prevLevels) =>
           prevLevels.map((lvl) =>
             lvl.id === currentLevelId + 1 ? { ...lvl, unlocked: true } : lvl
@@ -130,14 +169,17 @@ export function App() {
 
         setTimeout(() => {
           setIsVictoryModalOpen(true);
-        }, 300);
+        }, 500);
       }
     } else {
-      // Mistake: Glitch Distortion Sound & Combo Reset!
+      // Typo! "Don't Break the Beat"
       synthEngine.playGlitchDistortion();
       setLastNote(null);
       setHasGlitch(true);
       setTimeout(() => setHasGlitch(false), 250);
+
+      // Append incorrect character so user sees the mistake highlighted
+      setUserInput(userInput + char);
 
       setStats((prev) => ({
         ...prev,
@@ -154,15 +196,25 @@ export function App() {
   // Handle Backspace
   const handleBackspace = () => {
     if (userInput.length > 0 && !isVictoryModalOpen) {
-      setUserInput((prev) => prev.slice(0, -1));
+      const nextInput = userInput.slice(0, -1);
+      setUserInput(nextInput);
+
+      // If the error was eliminated, resume the beat!
+      if (!checkHasError(nextInput, currentLevel.code)) {
+        chiptunePlayer.resumeBeat();
+      }
     }
   };
 
-  const hasNextLevel = levels.some((lvl) => lvl.id === currentLevelId + 1);
+  // Find next level in current language
+  const levelsInLanguage = levels.filter((l) => l.language === currentLanguage);
+  const currentIdxInLang = levelsInLanguage.findIndex((l) => l.id === currentLevelId);
+  const hasNextLevel = currentIdxInLang >= 0 && currentIdxInLang < levelsInLanguage.length - 1;
 
   const handleNextLevel = () => {
     if (hasNextLevel) {
-      setCurrentLevelId((prev) => prev + 1);
+      const nextLvl = levelsInLanguage[currentIdxInLang + 1];
+      setCurrentLevelId(nextLvl.id);
       resetLevel();
     }
   };
@@ -192,38 +244,36 @@ export function App() {
 
       {/* Main Container */}
       <div style={{ maxWidth: '960px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
-        {/* Cyber HUD Header */}
+        {/* Cyber HUD Header with Logo & Slogan */}
         <CyberHUD
           currentLevel={currentLevel}
           stats={stats}
           isMuted={isMuted}
+          isBeatBroken={isBeatBroken}
+          currentLanguage={currentLanguage}
+          onSelectLanguage={handleSelectLanguage}
           onToggleMute={handleToggleMute}
           onOpenLevelSelector={() => setIsLevelSelectorOpen(true)}
         />
 
-        {/* 8-Bit Chiptune Track Player & APU Synthesizer Control */}
+        {/* Chiptune Beat Controller & Beat Switcher */}
         <ChiptuneController
-          combo={stats.combo}
           lastNote={lastNote}
-          activeMelody={activeMelody}
-          onSelectMelody={(melodyId) => {
-            const found = SYNCED_MELODIES.find((m) => m.id === melodyId);
-            if (found) {
-              setActiveMelody(found);
-            }
-          }}
+          isBeatBroken={isBeatBroken}
         />
 
         {/* Real-time Oscilloscope & Spectrum Visualizer */}
         <div style={{ marginBottom: '16px' }}>
-          <AudioVisualizer combo={stats.combo} hasError={hasGlitch} />
+          <AudioVisualizer combo={stats.combo} hasError={hasGlitch || isBeatBroken} />
         </div>
 
-        {/* Coding Arena */}
+        {/* Coding Arena with Live Execution Output */}
         <CodeEditorArena
           currentLevel={currentLevel}
           userInput={userInput}
           hasGlitch={hasGlitch}
+          isBeatBroken={isBeatBroken}
+          isCompleted={userInput === currentLevel.code}
           onKeyPress={handleKeyPress}
           onBackspace={handleBackspace}
           onResetLevel={resetLevel}
@@ -241,6 +291,8 @@ export function App() {
           <LevelSelectorModal
             levels={levels}
             currentLevelId={currentLevelId}
+            currentLanguage={currentLanguage}
+            onSelectLanguage={handleSelectLanguage}
             onSelectLevel={handleSelectLevel}
             onClose={() => setIsLevelSelectorOpen(false)}
           />

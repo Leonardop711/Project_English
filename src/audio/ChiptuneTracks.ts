@@ -4,19 +4,18 @@ export interface ChiptuneTrack {
   author: string;
   bpm: number;
   description: string;
-  // 16 or 32 steps per pattern
   lead: string[];
   arp: string[];
   bass: string[];
-  drums: string[]; // 'K' = Kick, 'S' = Snare, 'H' = Hi-hat, '-' = Rest
+  drums: string[]; // 'K' = Kick, 'S' = Snare, 'H' = Hi-hat, 'O' = Open hat, '-' = Rest
 }
 
 export const NOTE_FREQS: Record<string, number> = {
   '-': 0,
   // Octave 2
-  'C2': 65.41, 'D2': 73.42, 'E2': 82.41, 'F2': 87.31, 'G2': 98.00, 'A2': 110.00, 'B2': 123.47,
+  'C2': 65.41, 'D2': 73.42, 'Eb2': 77.78, 'E2': 82.41, 'F2': 87.31, 'G2': 98.00, 'A2': 110.00, 'Bb2': 116.54, 'B2': 123.47,
   // Octave 3
-  'C3': 130.81, 'D3': 146.83, 'Eb3': 155.56, 'E3': 164.81, 'F3': 174.61, 'G3': 196.00, 'Ab3': 207.65, 'A3': 220.00, 'Bb3': 233.08, 'B3': 246.94,
+  'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'Eb3': 155.56, 'E3': 164.81, 'F3': 174.61, 'F#3': 185.00, 'G3': 196.00, 'Ab3': 207.65, 'A3': 220.00, 'Bb3': 233.08, 'B3': 246.94,
   // Octave 4
   'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'Eb4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00, 'Ab4': 415.30, 'A4': 440.00, 'Bb4': 466.16, 'B4': 493.88,
   // Octave 5
@@ -27,34 +26,11 @@ export const NOTE_FREQS: Record<string, number> = {
 
 export const CHIPTUNE_TRACKS: ChiptuneTrack[] = [
   {
-    id: 'bangarang-beat',
-    title: 'BANGARANG 8-BIT DRUM GROOVE',
-    author: 'SKRILLEX 8-BIT APU',
-    bpm: 110,
-    description: 'Base rítmica Moombahton / Dubstep a 110 BPM para acompañar tu tecleo de Bangarang.',
-    lead: [
-      '-', '-', '-', '-', '-', '-', '-', '-',
-      '-', '-', '-', '-', '-', '-', '-', '-'
-    ],
-    arp: [
-      'D4', '-', 'D4', '-', 'D4', '-', 'D4', '-',
-      'D4', '-', 'D4', '-', 'F4', '-', 'A4', '-'
-    ],
-    bass: [
-      'D2', '-', '-', '-', 'D2', '-', '-', '-',
-      'D2', '-', '-', 'D2', '-', '-', 'F2', 'A2'
-    ],
-    drums: [
-      'K', '-', 'H', '-', 'S', '-', 'H', '-',
-      'K', '-', 'H', 'K', 'S', '-', 'H', 'H'
-    ]
-  },
-  {
-    id: 'cyber-genesis',
-    title: '8-BIT CYBER GENESIS',
-    author: 'CYBER-APU',
-    bpm: 125,
-    description: 'Himno chiptune retro en Re menor con arpegios veloces y bajo triangular.',
+    id: 'cyber-synthwave',
+    title: 'CYBER SYNTHWAVE (120 BPM)',
+    author: 'CodeRhythm Core',
+    bpm: 120,
+    description: 'Bajo analógico profundo, batería ochentosa y acordes en Re menor para máxima concentración.',
     lead: [
       'D5', '-', 'F5', '-', 'A5', '-', 'D6', '-',
       'C6', '-', 'A5', '-', 'F5', 'G5', 'A5', '-',
@@ -68,10 +44,10 @@ export const CHIPTUNE_TRACKS: ChiptuneTrack[] = [
       'A3', 'C#4', 'E4', 'C#4', 'A3', 'C#4', 'E4', 'C#4'
     ],
     bass: [
-      'D3', 'D3', 'D3', 'D3', 'D3', 'D3', 'F3', 'A2',
-      'C3', 'C3', 'C3', 'C3', 'C3', 'C3', 'E3', 'G2',
-      'Bb2', 'Bb2', 'Bb2', 'Bb2', 'Bb2', 'Bb2', 'D3', 'F2',
-      'A2', 'A2', 'A2', 'A2', 'A2', 'C#3', 'E3', 'A2'
+      'D2', 'D2', 'D3', 'D2', 'D2', 'D2', 'F2', 'A2',
+      'C2', 'C2', 'C3', 'C2', 'C2', 'C2', 'E2', 'G2',
+      'Bb2', 'Bb2', 'Bb3', 'Bb2', 'Bb2', 'Bb2', 'D2', 'F2',
+      'A2', 'A2', 'A3', 'A2', 'A2', 'C#3', 'E2', 'A2'
     ],
     drums: [
       'K', 'H', 'S', 'H', 'K', 'K', 'S', 'H',
@@ -81,11 +57,11 @@ export const CHIPTUNE_TRACKS: ChiptuneTrack[] = [
     ]
   },
   {
-    id: 'megaman-rush',
-    title: 'NEO MEGAMAN RUSH',
-    author: 'PIXEL-8',
-    bpm: 138,
-    description: 'Chiptune de acción heroica a 138 BPM estilo NES Capcom clásico.',
+    id: 'neon-chiptune',
+    title: 'NEON CHIPTUNE 8-BIT (128 BPM)',
+    author: 'Capcom NES Style',
+    bpm: 128,
+    description: 'Sonido retro arcade estilo Mega Man con pulso cuadrado y percusión veloz.',
     lead: [
       'A4', 'A4', 'C5', 'D5', 'E5', '-', 'D5', 'C5',
       'D5', '-', 'E5', 'G5', 'A5', '-', 'G5', 'E5',
@@ -99,78 +75,78 @@ export const CHIPTUNE_TRACKS: ChiptuneTrack[] = [
       'E3', 'G#3', 'B3', 'E4', 'E3', 'G#3', 'B3', 'E4'
     ],
     bass: [
-      'A2', '-', 'A2', 'A2', '-', 'A2', 'C3', 'E3',
-      'D3', '-', 'D3', 'D3', '-', 'D3', 'F3', 'A2',
-      'F2', '-', 'F2', 'F2', '-', 'F2', 'A2', 'C3',
-      'E2', '-', 'E2', 'E2', 'E2', 'E2', 'G#2', 'B2'
+      'A2', 'A2', 'A3', 'A2', 'A2', 'A2', 'C3', 'E2',
+      'D3', 'D3', 'D4', 'D3', 'D3', 'D3', 'F3', 'A2',
+      'F2', 'F2', 'F3', 'F2', 'F2', 'F2', 'A2', 'C3',
+      'E2', 'E2', 'E3', 'E2', 'E2', 'E2', 'G#2', 'B2'
     ],
     drums: [
+      'K', 'H', 'S', 'H', 'K', 'H', 'S', 'H',
       'K', 'H', 'S', 'H', 'K', 'K', 'S', 'H',
-      'K', 'H', 'S', 'H', 'K', 'H', 'S', 'K',
-      'K', 'H', 'S', 'H', 'K', 'K', 'S', 'H',
-      'K', 'H', 'S', 'S', 'K', 'S', 'S', 'K'
+      'K', 'H', 'S', 'H', 'K', 'H', 'S', 'H',
+      'K', 'H', 'S', 'H', 'K', 'H', 'S', 'O'
     ]
   },
   {
-    id: 'hacker-dungeon',
-    title: 'QUANTUM CHIP HAZARD',
-    author: 'CYBER-CORE',
-    bpm: 120,
-    description: 'Atmósfera 8-bit oscura y misteriosa para hackear subredes.',
+    id: 'lofi-chill',
+    title: 'LO-FI CODE CHILL (90 BPM)',
+    author: 'Cyber Study Club',
+    bpm: 90,
+    description: 'Cadencia relajada de 90 BPM con acordes cálidos y bombo suave para codificar sin prisa.',
     lead: [
-      'E5', '-', '-', 'G5', 'F#5', '-', 'E5', '-',
-      'B4', '-', 'D5', '-', 'E5', '-', '-', '-',
-      'C5', '-', '-', 'E5', 'D5', '-', 'C5', '-',
-      'A4', '-', 'C5', '-', 'B4', '-', '-', '-'
+      'D4', '-', '-', 'F4', 'A4', '-', 'G4', '-',
+      'F4', '-', 'E4', '-', 'D4', '-', '-', '-',
+      'C4', '-', '-', 'E4', 'G4', '-', 'F4', '-',
+      'E4', '-', 'D4', '-', 'C#4', '-', '-', '-'
     ],
     arp: [
-      'E4', 'G4', 'B4', 'G4', 'E4', 'G4', 'B4', 'G4',
-      'D4', 'F#4', 'A4', 'F#4', 'D4', 'F#4', 'A4', 'F#4',
-      'C4', 'E4', 'G4', 'E4', 'C4', 'E4', 'G4', 'E4',
-      'B3', 'D#4', 'F#4', 'D#4', 'B3', 'D#4', 'F#4', 'D#4'
+      'F3', 'A3', 'C4', 'E4', 'F3', 'A3', 'C4', 'E4',
+      'D3', 'F3', 'A3', 'C4', 'D3', 'F3', 'A3', 'C4',
+      'Bb2', 'D3', 'F3', 'A3', 'Bb2', 'D3', 'F3', 'A3',
+      'A2', 'C#3', 'E3', 'G3', 'A2', 'C#3', 'E3', 'G3'
     ],
     bass: [
-      'E2', 'E2', '-', 'E2', 'E2', '-', 'G2', 'B2',
-      'D2', 'D2', '-', 'D2', 'D2', '-', 'F#2', 'A2',
-      'C2', 'C2', '-', 'C2', 'C2', '-', 'E2', 'G2',
-      'B1', 'B1', '-', 'B1', 'B1', 'B1', 'D#2', 'F#2'
+      'D2', '-', '-', 'D2', '-', '-', 'D2', '-',
+      'Bb2', '-', '-', 'Bb2', '-', '-', 'Bb2', '-',
+      'G2', '-', '-', 'G2', '-', '-', 'G2', '-',
+      'A2', '-', '-', 'A2', '-', '-', 'A2', '-'
     ],
     drums: [
-      'K', '-', 'S', 'H', 'K', '-', 'S', 'H',
-      'K', 'H', 'S', '-', 'K', 'H', 'S', 'H',
-      'K', '-', 'S', 'H', 'K', '-', 'S', 'H',
-      'K', 'H', 'S', 'K', 'S', 'S', 'K', 'H'
+      'K', '-', 'H', '-', 'S', '-', 'H', '-',
+      'K', '-', 'H', 'K', 'S', '-', 'H', '-',
+      'K', '-', 'H', '-', 'S', '-', 'H', '-',
+      'K', '-', 'H', '-', 'S', '-', 'H', 'H'
     ]
   },
   {
-    id: 'overclock-boss',
-    title: 'OVERCLOCK 8-BIT CLIMAX',
-    author: 'RETRO-TITAN',
-    bpm: 148,
-    description: 'Tempo frenético a 148 BPM para teclear a máxima adrenalina.',
+    id: 'electro-rush',
+    title: 'OVERCLOCK ELECTRO (140 BPM)',
+    author: 'Neural Overdrive',
+    bpm: 140,
+    description: 'Ritmo acelerado a 140 BPM con bajos cortantes y percusión agresiva para máxima adrenalina.',
     lead: [
-      'F5', 'F5', 'Ab5', 'C6', 'Bb5', '-', 'Ab5', 'G5',
-      'Ab5', '-', 'Bb5', 'C6', 'Db6', '-', 'C6', 'Bb5',
-      'C6', 'C6', 'Eb6', 'F6', 'Eb6', '-', 'Db6', 'C6',
-      'Bb5', '-', 'Ab5', 'G5', 'F5', '-', '-', '-'
+      'D5', 'D5', '-', 'D5', 'F5', 'F5', '-', 'F5',
+      'G5', 'G5', 'F5', 'D5', 'C5', '-', 'C5', '-',
+      'D5', 'D5', '-', 'D5', 'F5', 'F5', '-', 'F5',
+      'A5', 'A5', 'G5', 'F5', 'D5', '-', '-', '-'
     ],
     arp: [
-      'F4', 'Ab4', 'C5', 'Ab4', 'F4', 'Ab4', 'C5', 'Ab4',
-      'Db4', 'F4', 'Ab4', 'F4', 'Db4', 'F4', 'Ab4', 'F4',
-      'Eb4', 'G4', 'Bb4', 'G4', 'Eb4', 'G4', 'Bb4', 'G4',
-      'C4', 'E4', 'G4', 'E4', 'C4', 'E4', 'G4', 'E4'
+      'D4', 'D4', 'F4', 'D4', 'A4', 'D4', 'F4', 'D4',
+      'C4', 'C4', 'E4', 'C4', 'G4', 'C4', 'E4', 'C4',
+      'Bb3', 'Bb3', 'D4', 'Bb3', 'F4', 'Bb3', 'D4', 'Bb3',
+      'A3', 'A3', 'C#4', 'A3', 'E4', 'A3', 'C#4', 'A3'
     ],
     bass: [
-      'F2', 'F2', 'F2', 'F2', 'F2', 'F2', 'Ab2', 'C3',
-      'Db2', 'Db2', 'Db2', 'Db2', 'Db2', 'Db2', 'F2', 'Ab2',
-      'Eb2', 'Eb2', 'Eb2', 'Eb2', 'Eb2', 'Eb2', 'G2', 'Bb2',
-      'C2', 'C2', 'C2', 'C2', 'C2', 'C2', 'E2', 'G2'
+      'D2', 'D2', 'D2', 'D2', 'D2', 'D2', 'D2', 'D2',
+      'C2', 'C2', 'C2', 'C2', 'C2', 'C2', 'C2', 'C2',
+      'Bb2', 'Bb2', 'Bb2', 'Bb2', 'Bb2', 'Bb2', 'Bb2', 'Bb2',
+      'A2', 'A2', 'A2', 'A2', 'A2', 'A2', 'A2', 'A2'
     ],
     drums: [
       'K', 'H', 'S', 'H', 'K', 'K', 'S', 'H',
       'K', 'H', 'S', 'H', 'K', 'H', 'S', 'S',
       'K', 'H', 'S', 'H', 'K', 'K', 'S', 'H',
-      'K', 'K', 'S', 'S', 'K', 'S', 'K', 'S'
+      'K', 'K', 'S', 'H', 'K', 'S', 'S', 'S'
     ]
   }
 ];

@@ -1,5 +1,7 @@
 import { ChiptuneTrack, CHIPTUNE_TRACKS, NOTE_FREQS } from './ChiptuneTracks';
 
+export type BeatStatusCallback = (isBroken: boolean) => void;
+
 export class ChiptunePlayer {
   private ctx: AudioContext | null = null;
   private outputNode: AudioNode | null = null;
@@ -8,12 +10,16 @@ export class ChiptunePlayer {
   private currentTrack: ChiptuneTrack = CHIPTUNE_TRACKS[0];
   private isPlaying: boolean = false;
   private isMuted: boolean = false;
-  private volume: number = 0.45; // Default BGM volume (nicely balanced with typing notes)
+  private volume: number = 0.45; // Default BGM volume
+  private isBeatCut: boolean = false;
 
   private currentStep: number = 0;
   private nextStepTime: number = 0;
   private timerId: number | null = null;
   private combo: number = 0;
+
+  // Listeners for UI sync
+  private beatStatusListeners: Set<BeatStatusCallback> = new Set();
 
   // Noise buffer for 8-bit drums
   private noiseBuffer: AudioBuffer | null = null;
@@ -44,6 +50,16 @@ export class ChiptunePlayer {
     this.noiseBuffer = buffer;
   }
 
+  public subscribeBeatStatus(cb: BeatStatusCallback): () => void {
+    this.beatStatusListeners.add(cb);
+    cb(this.isBeatCut);
+    return () => this.beatStatusListeners.delete(cb);
+  }
+
+  private notifyBeatStatus() {
+    this.beatStatusListeners.forEach((cb) => cb(this.isBeatCut));
+  }
+
   public getTracks(): ChiptuneTrack[] {
     return CHIPTUNE_TRACKS;
   }
@@ -69,7 +85,7 @@ export class ChiptunePlayer {
 
   public setVolume(vol: number) {
     this.volume = Math.max(0, Math.min(1, vol));
-    if (this.bgmGain && this.ctx && !this.isMuted) {
+    if (this.bgmGain && this.ctx && !this.isMuted && !this.isBeatCut) {
       this.bgmGain.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.05);
     }
   }
@@ -81,7 +97,8 @@ export class ChiptunePlayer {
   public setMuted(muted: boolean) {
     this.isMuted = muted;
     if (this.bgmGain && this.ctx) {
-      this.bgmGain.gain.setTargetAtTime(muted ? 0 : this.volume, this.ctx.currentTime, 0.05);
+      const target = muted || this.isBeatCut ? 0 : this.volume;
+      this.bgmGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.05);
     }
   }
 
@@ -89,13 +106,20 @@ export class ChiptunePlayer {
     return this.isPlaying;
   }
 
+  public isBeatBroken(): boolean {
+    return this.isBeatCut;
+  }
+
   public start() {
     if (!this.ctx || !this.bgmGain) return;
     if (this.isPlaying) return;
 
     this.isPlaying = true;
+    this.isBeatCut = false;
+    this.notifyBeatStatus();
     this.currentStep = 0;
     this.nextStepTime = this.ctx.currentTime + 0.1;
+    this.bgmGain.gain.setTargetAtTime(this.isMuted ? 0 : this.volume, this.ctx.currentTime, 0.05);
     this.scheduler();
   }
 
@@ -118,16 +142,73 @@ export class ChiptunePlayer {
   }
 
   /**
-   * Temporary pitch drop and pause when the user makes a typo in the code
+   * "Don't Break the Beat" Mechanic:
+   * Instantly decelerates pitch and kills gain on typo with a tape-stop sound.
    */
-  public triggerGlitch() {
-    if (!this.ctx || !this.bgmGain || !this.isPlaying) return;
+  public triggerTapeStop() {
+    if (!this.ctx || !this.bgmGain) return;
+    this.isBeatCut = true;
+    this.notifyBeatStatus();
 
     const now = this.ctx.currentTime;
-    // Momentary drop in BGM volume + detune glitch
+
+    // 1. Cut the BGM gain immediately
     this.bgmGain.gain.cancelScheduledValues(now);
-    this.bgmGain.gain.setValueAtTime(0.01, now);
-    this.bgmGain.gain.linearRampToValueAtTime(this.isMuted ? 0 : this.volume, now + 0.28);
+    this.bgmGain.gain.setValueAtTime(this.bgmGain.gain.value, now);
+    this.bgmGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+
+    // 2. Play Tape-Stop / Vinyl Scratch effect
+    const osc = this.ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(380, now);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.22); // Rapid deceleration
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(800, now);
+    filter.frequency.exponentialRampToValueAtTime(100, now + 0.22);
+
+    const tapeGain = this.ctx.createGain();
+    tapeGain.gain.setValueAtTime(0.35, now);
+    tapeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+    osc.connect(filter);
+    filter.connect(tapeGain);
+    if (this.outputNode) {
+      tapeGain.connect(this.outputNode);
+    }
+
+    osc.start(now);
+    osc.stop(now + 0.24);
+  }
+
+  /**
+   * Resume the beat when error is corrected or player continues typing cleanly
+   */
+  public resumeBeat() {
+    if (!this.ctx || !this.bgmGain) return;
+
+    if (!this.isPlaying) {
+      this.start();
+      return;
+    }
+
+    if (this.isBeatCut) {
+      this.isBeatCut = false;
+      this.notifyBeatStatus();
+
+      const now = this.ctx.currentTime;
+      this.bgmGain.gain.cancelScheduledValues(now);
+      this.bgmGain.gain.setValueAtTime(0.001, now);
+      this.bgmGain.gain.linearRampToValueAtTime(this.isMuted ? 0 : this.volume, now + 0.05);
+
+      // Play snappy kick pickup
+      this.playDrum('K', now);
+    }
+  }
+
+  public triggerGlitch() {
+    this.triggerTapeStop();
   }
 
   /**
@@ -136,10 +217,12 @@ export class ChiptunePlayer {
   private scheduler = () => {
     if (!this.isPlaying || !this.ctx) return;
 
-    // Schedule any notes that fall within the next 100ms
+    // If beat is broken, don't play sound steps, but advance timer so we resume seamlessly
     const lookahead = 0.1;
     while (this.nextStepTime < this.ctx.currentTime + lookahead) {
-      this.playStep(this.currentStep, this.nextStepTime);
+      if (!this.isBeatCut) {
+        this.playStep(this.currentStep, this.nextStepTime);
+      }
       this.advanceStep();
     }
 
@@ -148,32 +231,31 @@ export class ChiptunePlayer {
 
   private advanceStep() {
     const secondsPerBeat = 60.0 / this.currentTrack.bpm;
-    // 16th note steps = beat / 4
     const stepDuration = secondsPerBeat / 4;
     this.nextStepTime += stepDuration;
     this.currentStep = (this.currentStep + 1) % this.currentTrack.drums.length;
   }
 
   private playStep(step: number, time: number) {
-    if (!this.ctx || !this.bgmGain) return;
+    if (!this.ctx || !this.bgmGain || this.isBeatCut) return;
 
     const track = this.currentTrack;
     const secondsPerBeat = 60.0 / track.bpm;
     const stepDuration = secondsPerBeat / 4;
 
-    // 1. Channel 4: 8-Bit Noise Drums (Plays always as rhythm base)
+    // 1. Channel 4: Drums
     const drumToken = track.drums[step % track.drums.length];
     if (drumToken && drumToken !== '-') {
       this.playDrum(drumToken, time);
     }
 
-    // 2. Channel 3: 8-Bit Triangle Bass (Plays always for harmonic drive)
+    // 2. Channel 3: Bass
     const bassNote = track.bass[step % track.bass.length];
     if (bassNote && bassNote !== '-') {
       this.playBassNote(bassNote, time, stepDuration * 0.95);
     }
 
-    // 3. Channel 1: 8-Bit Square Lead (Unlocks with combo >= 5)
+    // 3. Channel 1: Square Lead (combo >= 5)
     if (this.combo >= 5) {
       const leadNote = track.lead[step % track.lead.length];
       if (leadNote && leadNote !== '-') {
@@ -181,7 +263,7 @@ export class ChiptunePlayer {
       }
     }
 
-    // 4. Channel 2: 8-Bit Arpeggio Harmony (Unlocks with combo >= 10)
+    // 4. Channel 2: Arpeggio (combo >= 10)
     if (this.combo >= 10) {
       const arpNote = track.arp[step % track.arp.length];
       if (arpNote && arpNote !== '-') {
@@ -190,9 +272,6 @@ export class ChiptunePlayer {
     }
   }
 
-  /**
-   * Channel 1: Square wave lead
-   */
   private playLeadNote(note: string, time: number, duration: number) {
     if (!this.ctx || !this.bgmGain) return;
     const freq = NOTE_FREQS[note];
@@ -202,7 +281,6 @@ export class ChiptunePlayer {
     osc.type = 'square';
     osc.frequency.setValueAtTime(freq, time);
 
-    // High combo vibrato / pitch sparkle
     if (this.combo >= 20) {
       osc.frequency.setValueAtTime(freq * 1.005, time + duration * 0.5);
     }
@@ -220,9 +298,6 @@ export class ChiptunePlayer {
     osc.stop(time + duration);
   }
 
-  /**
-   * Channel 2: Fast Square Arpeggio
-   */
   private playArpNote(note: string, time: number, duration: number) {
     if (!this.ctx || !this.bgmGain) return;
     const freq = NOTE_FREQS[note];
@@ -244,9 +319,6 @@ export class ChiptunePlayer {
     osc.stop(time + duration);
   }
 
-  /**
-   * Channel 3: NES Triangle Bass
-   */
   private playBassNote(note: string, time: number, duration: number) {
     if (!this.ctx || !this.bgmGain) return;
     const freq = NOTE_FREQS[note];
@@ -269,14 +341,10 @@ export class ChiptunePlayer {
     osc.stop(time + duration);
   }
 
-  /**
-   * Channel 4: 8-Bit Noise Drums
-   */
   private playDrum(token: string, time: number) {
     if (!this.ctx || !this.bgmGain) return;
 
     if (token === 'K') {
-      // 8-Bit Kick: Fast punchy pitch-drop
       const osc = this.ctx.createOscillator();
       osc.type = 'square';
       osc.frequency.setValueAtTime(140, time);
@@ -292,7 +360,6 @@ export class ChiptunePlayer {
       osc.start(time);
       osc.stop(time + 0.1);
     } else if (token === 'S') {
-      // 8-Bit Snare: Bandpass filtered noise burst + tone
       if (!this.noiseBuffer) return;
 
       const noiseSource = this.ctx.createBufferSource();
@@ -314,7 +381,6 @@ export class ChiptunePlayer {
       noiseSource.start(time);
       noiseSource.stop(time + 0.13);
     } else if (token === 'H') {
-      // 8-Bit Hi-hat: Snappy metallic noise
       if (!this.noiseBuffer) return;
 
       const noiseSource = this.ctx.createBufferSource();
@@ -334,6 +400,26 @@ export class ChiptunePlayer {
 
       noiseSource.start(time);
       noiseSource.stop(time + 0.05);
+    } else if (token === 'O') {
+      if (!this.noiseBuffer) return;
+
+      const noiseSource = this.ctx.createBufferSource();
+      noiseSource.buffer = this.noiseBuffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(6000, time);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.18, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
+
+      noiseSource.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.bgmGain);
+
+      noiseSource.start(time);
+      noiseSource.stop(time + 0.2);
     }
   }
 }

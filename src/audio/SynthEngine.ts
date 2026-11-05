@@ -154,8 +154,9 @@ export class SynthEngine {
     const defaultNote = this.currentMelody.notes[0];
     if (!this.ctx || !this.masterGain) return defaultNote;
 
-    // Synchronize combo with 8-bit chiptune groove
+    // Synchronize combo with 8-bit chiptune groove & ensure beat resumes
     chiptunePlayer.setCombo(combo);
+    chiptunePlayer.resumeBeat();
 
     const notes = this.currentMelody.notes;
     const noteObj = notes[stepIndex % notes.length];
@@ -261,8 +262,9 @@ export class SynthEngine {
     if (!this.ctx || this.isMuted) this.init();
     if (!this.ctx || !this.masterGain) return;
 
-    // Update combo state in 8-bit chiptune engine
+    // Update combo state in 8-bit chiptune engine & resume beat
     chiptunePlayer.setCombo(combo);
+    chiptunePlayer.resumeBeat();
 
     const now = this.ctx.currentTime;
 
@@ -339,9 +341,9 @@ export class SynthEngine {
     if (!this.ctx || this.isMuted) this.init();
     if (!this.ctx || !this.masterGain) return;
 
-    // Trigger glitch pitch-drop on 8-bit chiptune track
+    // Trigger tape-stop beat cut on mistake: "Don't Break the Beat!"
     chiptunePlayer.setCombo(0);
-    chiptunePlayer.triggerGlitch();
+    chiptunePlayer.triggerTapeStop();
 
     const now = this.ctx.currentTime;
 

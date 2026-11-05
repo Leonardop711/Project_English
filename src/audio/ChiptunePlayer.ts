@@ -10,7 +10,7 @@ export class ChiptunePlayer {
   private currentTrack: ChiptuneTrack = CHIPTUNE_TRACKS[0];
   private isPlaying: boolean = false;
   private isMuted: boolean = false;
-  private volume: number = 0.45; // Default BGM volume
+  private volume: number = 0.30; // Default balanced BGM volume so key typing sounds cut through clearly
   private isBeatCut: boolean = false;
 
   private currentStep: number = 0;

@@ -136,7 +136,7 @@ export function App() {
       const scoreGain = Math.round(10 * multiplier);
 
       // Play synchronized harmonic note
-      const playedNote = synthEngine.playSyncedKeySound(currentIndex, newCombo);
+      const playedNote = synthEngine.playSyncedKeySound(currentIndex, newCombo, char);
       setLastNote(playedNote);
 
       const nextInput = userInput + char;

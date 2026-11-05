@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { Award, ArrowRight, RotateCcw, Flame, CheckCircle2 } from 'lucide-react';
+import { Award, ArrowRight, RotateCcw, Flame, CheckCircle2, X, Terminal } from 'lucide-react';
 import { Level, GameStats } from '../types';
 
 interface VictoryModalProps {
@@ -9,6 +9,7 @@ interface VictoryModalProps {
   hasNextLevel: boolean;
   onNextLevel: () => void;
   onReplay: () => void;
+  onClose?: () => void;
 }
 
 export const VictoryModal: React.FC<VictoryModalProps> = ({
@@ -17,6 +18,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   hasNextLevel,
   onNextLevel,
   onReplay,
+  onClose,
 }) => {
   const isPerfect = stats.errors === 0;
   const timeTaken = stats.startTime && stats.endTime ? Math.max(1, Math.round((stats.endTime - stats.startTime) / 1000)) : 1;
@@ -53,15 +55,41 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
       <div
         className="neo-box"
         style={{
-          maxWidth: '540px',
+          maxWidth: '560px',
           width: '100%',
-          padding: '30px',
+          padding: '28px',
           background: 'rgba(10, 14, 25, 0.98)',
           textAlign: 'center',
+          position: 'relative',
           border: isPerfect ? '2px solid var(--neon-green)' : '1px solid var(--neon-cyan)',
           boxShadow: isPerfect ? '0 0 30px rgba(0, 255, 163, 0.4)' : '0 0 25px rgba(0, 240, 255, 0.3)',
         }}
       >
+        {/* Top Close Button to return and inspect code & terminal */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            aria-label="Cerrar y ver terminal"
+            title="Cerrar para ver la terminal y tu código"
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '16px',
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '0.75rem',
+              fontFamily: 'var(--font-hud)',
+            }}
+          >
+            <X size={20} />
+          </button>
+        )}
+
         {/* Header Icon */}
         <div
           style={{
@@ -105,21 +133,22 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
         {/* Code Output Result Box */}
         <div
           style={{
-            background: 'rgba(0, 0, 0, 0.55)',
-            border: '1px solid rgba(0, 255, 163, 0.3)',
+            background: 'rgba(0, 0, 0, 0.65)',
+            border: '1px solid rgba(0, 255, 163, 0.35)',
             borderRadius: '4px',
-            padding: '12px 16px',
+            padding: '14px 18px',
             marginBottom: '18px',
             textAlign: 'left',
             fontFamily: 'var(--font-mono)',
-            fontSize: '0.85rem',
+            fontSize: '0.9rem',
             color: 'var(--neon-green)',
+            boxShadow: 'inset 0 0 15px rgba(0, 255, 163, 0.1)',
           }}
         >
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <CheckCircle2 size={12} color="var(--neon-green)" /> Salida del programa:
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <CheckCircle2 size={14} color="var(--neon-green)" /> Lo que imprimió tu programa en la terminal:
           </div>
-          <div>{level.expectedOutput}</div>
+          <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5', fontWeight: 600 }}>{level.expectedOutput}</div>
         </div>
 
         {/* Stats Grid */}
@@ -128,7 +157,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
             gap: '10px',
-            marginBottom: '22px',
+            marginBottom: '20px',
           }}
         >
           <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '10px 6px', borderRadius: '4px' }}>
@@ -150,7 +179,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button
             onClick={onReplay}
             style={{
@@ -173,6 +202,31 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
           >
             <RotateCcw size={16} /> REPETIR
           </button>
+
+          {onClose && (
+            <button
+              onClick={onClose}
+              style={{
+                flex: 1,
+                background: 'rgba(0, 240, 255, 0.1)',
+                border: '1px solid rgba(0, 240, 255, 0.3)',
+                color: 'var(--neon-cyan)',
+                padding: '12px',
+                borderRadius: '4px',
+                fontFamily: 'var(--font-hud)',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <Terminal size={16} /> VER TERMINAL
+            </button>
+          )}
 
           {hasNextLevel && (
             <button

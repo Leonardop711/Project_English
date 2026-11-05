@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { CyberHUD } from './components/CyberHUD';
 import { AudioVisualizer } from './components/AudioVisualizer';
 import { CodeEditorArena } from './components/CodeEditorArena';
@@ -23,6 +23,7 @@ export function App() {
   const [isLevelSelectorOpen, setIsLevelSelectorOpen] = useState<boolean>(false);
   const [isVictoryModalOpen, setIsVictoryModalOpen] = useState<boolean>(false);
   const [lastNote, setLastNote] = useState<{ note: string; label?: string } | null>(null);
+  const victoryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [stats, setStats] = useState<GameStats>({
     score: 0,
@@ -47,6 +48,10 @@ export function App() {
 
   // Reset inputs when switching level
   const resetLevel = useCallback(() => {
+    if (victoryTimeoutRef.current) {
+      clearTimeout(victoryTimeoutRef.current);
+      victoryTimeoutRef.current = null;
+    }
     setUserInput('');
     setHasGlitch(false);
     setIsVictoryModalOpen(false);
@@ -168,9 +173,15 @@ export function App() {
           )
         );
 
-        setTimeout(() => {
+        if (victoryTimeoutRef.current) {
+          clearTimeout(victoryTimeoutRef.current);
+        }
+
+        // Delay opening victory modal (3.5 seconds) so player can comfortably inspect
+        // the terminal execution output, or advance immediately using the inline terminal buttons
+        victoryTimeoutRef.current = setTimeout(() => {
           setIsVictoryModalOpen(true);
-        }, 500);
+        }, 3500);
       }
     } else {
       // Typo! "Don't Break the Beat"
@@ -213,6 +224,10 @@ export function App() {
   const hasNextLevel = currentIdxInLang >= 0 && currentIdxInLang < levelsInLanguage.length - 1;
 
   const handleNextLevel = () => {
+    if (victoryTimeoutRef.current) {
+      clearTimeout(victoryTimeoutRef.current);
+      victoryTimeoutRef.current = null;
+    }
     if (hasNextLevel) {
       const nextLvl = levelsInLanguage[currentIdxInLang + 1];
       setCurrentLevelId(nextLvl.id);
@@ -285,9 +300,18 @@ export function App() {
           hasGlitch={hasGlitch}
           isBeatBroken={isBeatBroken}
           isCompleted={userInput === currentLevel.code}
+          hasNextLevel={hasNextLevel}
           onKeyPress={handleKeyPress}
           onBackspace={handleBackspace}
           onResetLevel={resetLevel}
+          onNextLevel={handleNextLevel}
+          onOpenStats={() => {
+            if (victoryTimeoutRef.current) {
+              clearTimeout(victoryTimeoutRef.current);
+              victoryTimeoutRef.current = null;
+            }
+            setIsVictoryModalOpen(true);
+          }}
         />
 
         {/* Virtual Keyboard & Quick Macros */}
@@ -318,6 +342,7 @@ export function App() {
             hasNextLevel={hasNextLevel}
             onNextLevel={handleNextLevel}
             onReplay={resetLevel}
+            onClose={() => setIsVictoryModalOpen(false)}
           />
         )}
       </div>

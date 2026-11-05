@@ -1,5 +1,5 @@
 import React from 'react';
-import { Volume2, VolumeX, Zap, ShieldAlert, Activity, Award } from 'lucide-react';
+import { Volume2, VolumeX, Zap, ShieldAlert, Activity, Award, Terminal, Cpu } from 'lucide-react';
 import { Level, GameStats, Language } from '../types';
 
 interface CyberHUDProps {
@@ -31,14 +31,14 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
   const multiplier =
     stats.combo >= 20 ? 4 : stats.combo >= 10 ? 2 : stats.combo >= 5 ? 1.5 : 1;
 
-  const languages: { id: Language; label: string; icon: string }[] = [
-    { id: 'python', label: 'PYTHON', icon: '🐍' },
-    { id: 'javascript', label: 'JAVASCRIPT', icon: '⚡' },
-    { id: 'c', label: 'C LANG', icon: '⚙️' },
+  const languages: { id: Language; label: string; icon: React.ReactNode }[] = [
+    { id: 'python', label: 'PYTHON', icon: <Terminal size={14} /> },
+    { id: 'javascript', label: 'JAVASCRIPT', icon: <Zap size={14} /> },
+    { id: 'c', label: 'C LANG', icon: <Cpu size={14} /> },
   ];
 
   return (
-    <header className="neo-box" style={{ padding: '14px 20px', marginBottom: '16px' }}>
+    <header className="neo-box" style={{ padding: '16px 22px', marginBottom: '16px' }}>
       {/* Top Branding Bar with Logo, Slogan & Status */}
       <div
         style={{
@@ -46,10 +46,10 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '12px',
-          paddingBottom: '12px',
-          borderBottom: '1px solid rgba(0, 240, 255, 0.15)',
-          marginBottom: '12px',
+          gap: '14px',
+          paddingBottom: '14px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          marginBottom: '14px',
         }}
       >
         {/* Logo & Slogan */}
@@ -58,12 +58,12 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
             src="/coderhythm-logo.jpg"
             alt="CodeRhythm Logo"
             style={{
-              height: '48px',
+              height: '46px',
               borderRadius: '6px',
-              border: isBeatBroken ? '1px solid #ff3366' : '1px solid var(--neon-green)',
+              border: isBeatBroken ? '1px solid #ff3366' : '1px solid rgba(0, 255, 163, 0.5)',
               boxShadow: isBeatBroken
-                ? '0 0 12px rgba(255, 51, 102, 0.6)'
-                : '0 0 12px rgba(0, 255, 163, 0.4)',
+                ? '0 0 12px rgba(255, 51, 102, 0.5)'
+                : '0 0 12px rgba(0, 255, 163, 0.3)',
               transition: 'all 0.2s ease',
             }}
           />
@@ -72,37 +72,23 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
               <span
                 style={{
                   fontFamily: 'var(--font-hud)',
-                  fontSize: '1.2rem',
+                  fontSize: '1.25rem',
                   fontWeight: 900,
-                  letterSpacing: '2px',
+                  letterSpacing: '1.5px',
                   color: '#ffffff',
-                  textShadow: '0 0 10px rgba(0, 255, 163, 0.6)',
                 }}
               >
                 Code<span style={{ color: 'var(--neon-green)' }}>Rhythm</span>
-              </span>
-              <span
-                style={{
-                  fontFamily: 'var(--font-hud)',
-                  fontSize: '0.7rem',
-                  letterSpacing: '1px',
-                  color: 'var(--neon-cyan)',
-                  padding: '1px 6px',
-                  background: 'rgba(0, 240, 255, 0.1)',
-                  borderRadius: '2px',
-                  border: '1px solid rgba(0, 240, 255, 0.3)',
-                }}
-              >
-                v2.0
               </span>
             </div>
             <div
               style={{
                 fontFamily: 'var(--font-hud)',
                 fontSize: '0.75rem',
-                color: 'var(--text-secondary)',
+                color: 'var(--neon-cyan)',
                 letterSpacing: '1.5px',
-                marginTop: '2px',
+                fontWeight: 700,
+                marginTop: '1px',
               }}
             >
               DON'T BREAK THE BEAT
@@ -110,24 +96,25 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
           </div>
         </div>
 
-        {/* Dynamic Beat Status Badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Dynamic Beat Status Badge & Mute Control */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
+              gap: '7px',
+              padding: '6px 14px',
               borderRadius: '4px',
               fontFamily: 'var(--font-hud)',
               fontSize: '0.75rem',
               letterSpacing: '1px',
+              fontWeight: 700,
               backgroundColor: isBeatBroken ? 'rgba(255, 51, 102, 0.15)' : 'rgba(0, 255, 163, 0.15)',
               border: isBeatBroken ? '1px solid #ff3366' : '1px solid var(--neon-green)',
               color: isBeatBroken ? '#ff3366' : 'var(--neon-green)',
               boxShadow: isBeatBroken
-                ? '0 0 10px rgba(255, 51, 102, 0.4)'
-                : '0 0 10px rgba(0, 255, 163, 0.3)',
+                ? '0 0 10px rgba(255, 51, 102, 0.35)'
+                : '0 0 10px rgba(0, 255, 163, 0.25)',
               transition: 'all 0.15s ease',
             }}
           >
@@ -141,7 +128,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
                 boxShadow: isBeatBroken ? '0 0 8px #ff3366' : '0 0 8px var(--neon-green)',
               }}
             />
-            {isBeatBroken ? '⚠ BEAT BROKEN (CORRIGE LA TECLA)' : '● BEAT EN RITMO (IN SYNC)'}
+            {isBeatBroken ? 'BEAT INTERRUMPIDO' : 'BEAT SINCRONIZADO'}
           </div>
 
           {/* Mute button */}
@@ -150,10 +137,10 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
             aria-label={isMuted ? 'Activar Sonido' : 'Silenciar'}
             title={isMuted ? 'Activar Sonido' : 'Silenciar'}
             style={{
-              background: 'rgba(5, 7, 13, 0.8)',
-              border: '1px solid rgba(0, 240, 255, 0.3)',
+              background: 'rgba(5, 7, 13, 0.85)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
               borderRadius: '4px',
-              padding: '6px 10px',
+              padding: '6px 12px',
               color: isMuted ? '#ff3366' : 'var(--neon-cyan)',
               cursor: 'pointer',
               display: 'flex',
@@ -161,10 +148,12 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
               gap: '6px',
               fontFamily: 'var(--font-hud)',
               fontSize: '0.7rem',
+              fontWeight: 600,
+              transition: 'all 0.15s ease',
             }}
           >
-            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-            {isMuted ? 'MUTED' : 'AUDIO ON'}
+            {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+            {isMuted ? 'SILENCIADO' : 'SONIDO'}
           </button>
         </div>
       </div>
@@ -179,17 +168,18 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
           gap: '12px',
         }}
       >
-        {/* Language Tabs */}
+        {/* Language Tabs (SVG Icons instead of Emojis) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span
             style={{
               fontFamily: 'var(--font-hud)',
               fontSize: '0.7rem',
               color: 'var(--text-secondary)',
-              marginRight: '4px',
+              marginRight: '2px',
+              fontWeight: 600,
             }}
           >
-            PISTA:
+            LENGUAJE:
           </span>
           {languages.map((lang) => {
             const isActive = currentLanguage === lang.id;
@@ -198,19 +188,20 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
                 key={lang.id}
                 onClick={() => onSelectLanguage(lang.id)}
                 style={{
-                  background: isActive ? 'rgba(0, 240, 255, 0.18)' : 'rgba(0, 0, 0, 0.4)',
+                  background: isActive ? 'rgba(0, 240, 255, 0.2)' : 'rgba(0, 0, 0, 0.35)',
                   border: isActive ? '1px solid var(--neon-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
                   color: isActive ? 'var(--neon-cyan)' : 'var(--text-secondary)',
                   fontFamily: 'var(--font-hud)',
                   fontSize: '0.75rem',
-                  padding: '5px 12px',
-                  borderRadius: '3px',
+                  padding: '6px 14px',
+                  borderRadius: '4px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
+                  fontWeight: isActive ? 700 : 500,
                   transition: 'all 0.15s ease',
-                  boxShadow: isActive ? '0 0 8px rgba(0, 240, 255, 0.3)' : 'none',
+                  boxShadow: isActive ? '0 0 10px rgba(0, 240, 255, 0.25)' : 'none',
                 }}
               >
                 <span>{lang.icon}</span>
@@ -225,9 +216,10 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
           <span
             style={{
               fontFamily: 'var(--font-hud)',
-              fontSize: '0.95rem',
+              fontSize: '0.9rem',
               color: 'var(--neon-yellow)',
               letterSpacing: '1px',
+              fontWeight: 700,
             }}
           >
             {currentLevel.name}
@@ -239,10 +231,12 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
               border: '1px solid rgba(0, 240, 255, 0.4)',
               color: 'var(--neon-cyan)',
               fontSize: '0.65rem',
-              padding: '3px 8px',
+              padding: '4px 10px',
               cursor: 'pointer',
-              borderRadius: '2px',
+              borderRadius: '3px',
               fontFamily: 'var(--font-hud)',
+              fontWeight: 600,
+              transition: 'all 0.15s ease',
             }}
           >
             CAMBIAR NIVEL
@@ -269,6 +263,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
                 alignItems: 'center',
                 gap: '4px',
                 justifyContent: 'center',
+                fontWeight: 600,
               }}
             >
               <Zap size={12} color={stats.combo > 10 ? 'var(--neon-yellow)' : 'var(--neon-cyan)'} />
@@ -280,7 +275,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
                 fontSize: '1.25rem',
                 fontWeight: 900,
                 color: stats.combo >= 20 ? 'var(--neon-yellow)' : stats.combo >= 5 ? 'var(--neon-cyan)' : '#fff',
-                textShadow: stats.combo >= 10 ? '0 0 10px rgba(0,240,255,0.8)' : 'none',
+                textShadow: stats.combo >= 10 ? '0 0 10px rgba(0,240,255,0.7)' : 'none',
               }}
             >
               {stats.combo}
@@ -301,6 +296,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
                 alignItems: 'center',
                 gap: '4px',
                 justifyContent: 'center',
+                fontWeight: 600,
               }}
             >
               <Activity size={12} color="var(--neon-green)" />
@@ -329,6 +325,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
                 alignItems: 'center',
                 gap: '4px',
                 justifyContent: 'center',
+                fontWeight: 600,
               }}
             >
               <ShieldAlert size={12} color={stats.stability < 30 ? '#ff3366' : 'var(--neon-cyan)'} />
@@ -357,6 +354,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({
                 alignItems: 'center',
                 gap: '4px',
                 justifyContent: 'center',
+                fontWeight: 600,
               }}
             >
               <Award size={12} color="var(--neon-magenta)" />

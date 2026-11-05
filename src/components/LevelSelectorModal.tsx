@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Lock, CheckCircle, Play } from 'lucide-react';
+import { X, Lock, CheckCircle, Play, Terminal, Zap, Cpu } from 'lucide-react';
 import { Level, Language } from '../types';
 
 interface LevelSelectorModalProps {
@@ -23,10 +23,10 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
 
   const filteredLevels = levels.filter((lvl) => lvl.language === selectedTab);
 
-  const tabs: { id: Language; label: string; icon: string }[] = [
-    { id: 'python', label: 'PYTHON', icon: '🐍' },
-    { id: 'javascript', label: 'JAVASCRIPT', icon: '⚡' },
-    { id: 'c', label: 'C LANG', icon: '⚙️' },
+  const tabs: { id: Language; label: string; icon: React.ReactNode }[] = [
+    { id: 'python', label: 'PYTHON', icon: <Terminal size={14} /> },
+    { id: 'javascript', label: 'JAVASCRIPT', icon: <Zap size={14} /> },
+    { id: 'c', label: 'C LANG', icon: <Cpu size={14} /> },
   ];
 
   return (
@@ -37,7 +37,7 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
         left: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: 'rgba(5, 7, 13, 0.85)',
+        backgroundColor: 'rgba(5, 7, 13, 0.88)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
@@ -63,7 +63,7 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '16px',
-            borderBottom: '1px solid rgba(0, 240, 255, 0.2)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
             paddingBottom: '12px',
           }}
         >
@@ -73,12 +73,13 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                 fontFamily: 'var(--font-hud)',
                 fontSize: '1.25rem',
                 color: 'var(--neon-cyan)',
-                letterSpacing: '1.5px',
+                letterSpacing: '1px',
+                fontWeight: 700,
               }}
             >
-              // SELECTOR DE NIVELES & LENGUAJE
+              SELECTOR DE NIVELES
             </h2>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', marginTop: '2px' }}>
               CODERHYTHM: DON'T BREAK THE BEAT
             </div>
           </div>
@@ -96,7 +97,7 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
           </button>
         </div>
 
-        {/* Language Tabs */}
+        {/* Language Tabs (Lucide SVG Icons) */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
           {tabs.map((tab) => {
             const isActive = selectedTab === tab.id;
@@ -112,16 +113,18 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                   background: isActive ? 'rgba(0, 240, 255, 0.2)' : 'rgba(0, 0, 0, 0.4)',
                   border: isActive ? '1px solid var(--neon-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
                   color: isActive ? 'var(--neon-cyan)' : 'var(--text-secondary)',
-                  padding: '8px 12px',
+                  padding: '9px 12px',
                   borderRadius: '4px',
                   cursor: 'pointer',
                   fontFamily: 'var(--font-hud)',
                   fontSize: '0.8rem',
+                  fontWeight: isActive ? 700 : 500,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px',
+                  gap: '8px',
                   transition: 'all 0.15s ease',
+                  boxShadow: isActive ? '0 0 10px rgba(0, 240, 255, 0.25)' : 'none',
                 }}
               >
                 <span>{tab.icon}</span>
@@ -150,7 +153,7 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '12px 16px',
+                  padding: '14px 18px',
                   background: isCurrent
                     ? 'rgba(0, 240, 255, 0.15)'
                     : isUnlocked
@@ -167,7 +170,7 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                   transition: 'all 0.15s ease',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                   {isUnlocked ? (
                     isCurrent ? (
                       <Play size={18} color="var(--neon-cyan)" />
@@ -185,11 +188,12 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                         fontSize: '0.9rem',
                         color: isCurrent ? 'var(--neon-cyan)' : '#fff',
                         letterSpacing: '1px',
+                        fontWeight: 700,
                       }}
                     >
                       {lvl.name}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
                       {lvl.category} • <span style={{ color: 'var(--neon-yellow)' }}>{lvl.baseBpm} BPM</span>
                     </div>
                   </div>
@@ -199,9 +203,9 @@ export const LevelSelectorModal: React.FC<LevelSelectorModalProps> = ({
                   style={{
                     fontSize: '0.7rem',
                     fontFamily: 'var(--font-hud)',
-                    padding: '3px 8px',
-                    borderRadius: '2px',
-                    background: isCurrent ? 'var(--neon-cyan)' : 'rgba(255, 255, 255, 0.1)',
+                    padding: '4px 10px',
+                    borderRadius: '3px',
+                    background: isCurrent ? 'var(--neon-cyan)' : 'rgba(255, 255, 255, 0.08)',
                     color: isCurrent ? '#000' : 'var(--text-secondary)',
                     fontWeight: 700,
                   }}

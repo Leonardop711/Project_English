@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { Award, ArrowRight, RotateCcw, Flame } from 'lucide-react';
+import { Award, ArrowRight, RotateCcw, Flame, CheckCircle2 } from 'lucide-react';
 import { Level, GameStats } from '../types';
 
 interface VictoryModalProps {
@@ -29,7 +29,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
       particleCount: isPerfect ? 140 : 80,
       spread: 90,
       origin: { y: 0.6 },
-      colors: isPerfect ? ['#00ff66', '#00f0ff', '#ffd700', '#ff0055'] : ['#00f0ff', '#8b5cf6', '#00ff66'],
+      colors: isPerfect ? ['#00ff9d', '#00f0ff', '#ffd700', '#ff0055'] : ['#00f0ff', '#8b5cf6', '#00ff9d'],
     });
   }, [isPerfect]);
 
@@ -55,7 +55,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
         style={{
           maxWidth: '540px',
           width: '100%',
-          padding: '28px',
+          padding: '30px',
           background: 'rgba(10, 14, 25, 0.98)',
           textAlign: 'center',
           border: isPerfect ? '2px solid var(--neon-green)' : '1px solid var(--neon-cyan)',
@@ -83,11 +83,12 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             fontFamily: 'var(--font-hud)',
             fontSize: '1.75rem',
             color: isPerfect ? 'var(--neon-green)' : 'var(--neon-cyan)',
-            letterSpacing: '2px',
+            letterSpacing: '1.5px',
             marginBottom: '4px',
+            fontWeight: 700,
           }}
         >
-          {isPerfect ? '¡RITMO PERFECTO! // NO ERRORS' : '¡NIVEL COMPLETADO!'}
+          {isPerfect ? '¡RITMO PERFECTO! // 0 ERRORES' : '¡NIVEL COMPLETADO!'}
         </h2>
         <div
           style={{
@@ -95,28 +96,28 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             fontSize: '0.85rem',
             color: 'var(--text-secondary)',
             letterSpacing: '1px',
-            marginBottom: '12px',
+            marginBottom: '14px',
           }}
         >
-          DON'T BREAK THE BEAT // {level.name}
+          {level.name}
         </div>
 
         {/* Code Output Result Box */}
         <div
           style={{
-            background: 'rgba(0, 0, 0, 0.5)',
+            background: 'rgba(0, 0, 0, 0.55)',
             border: '1px solid rgba(0, 255, 163, 0.3)',
             borderRadius: '4px',
-            padding: '10px 14px',
+            padding: '12px 16px',
             marginBottom: '18px',
             textAlign: 'left',
             fontFamily: 'var(--font-mono)',
-            fontSize: '0.8rem',
+            fontSize: '0.85rem',
             color: 'var(--neon-green)',
           }}
         >
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginBottom: '2px' }}>
-            Salida de ejecución en vivo:
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <CheckCircle2 size={12} color="var(--neon-green)" /> Salida del programa:
           </div>
           <div>{level.expectedOutput}</div>
         </div>
@@ -131,20 +132,20 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
           }}
         >
           <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '10px 6px', borderRadius: '4px' }}>
-            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)' }}>WPM</div>
-            <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: 'var(--neon-cyan)' }}>{wpm}</div>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', fontWeight: 600 }}>WPM</div>
+            <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: 'var(--neon-cyan)', fontWeight: 700 }}>{wpm}</div>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '10px 6px', borderRadius: '4px' }}>
-            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)' }}>PRECISIÓN</div>
-            <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: accuracy >= 95 ? 'var(--neon-green)' : 'var(--neon-yellow)' }}>{accuracy}%</div>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', fontWeight: 600 }}>PRECISIÓN</div>
+            <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: accuracy >= 95 ? 'var(--neon-green)' : 'var(--neon-yellow)', fontWeight: 700 }}>{accuracy}%</div>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '10px 6px', borderRadius: '4px' }}>
-            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)' }}>MAX COMBO</div>
-            <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: 'var(--neon-yellow)' }}>{stats.maxCombo}</div>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', fontWeight: 600 }}>MAX COMBO</div>
+            <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: 'var(--neon-yellow)', fontWeight: 700 }}>{stats.maxCombo}</div>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '10px 6px', borderRadius: '4px' }}>
-            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)' }}>TIEMPO</div>
-            <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: '#fff' }}>{timeTaken}s</div>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', fontWeight: 600 }}>TIEMPO</div>
+            <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: '#fff', fontWeight: 700 }}>{timeTaken}s</div>
           </div>
         </div>
 
@@ -154,18 +155,20 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             onClick={onReplay}
             style={{
               flex: 1,
-              background: 'rgba(255, 255, 255, 0.05)',
+              background: 'rgba(255, 255, 255, 0.06)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
               color: 'var(--text-secondary)',
               padding: '12px',
               borderRadius: '4px',
               fontFamily: 'var(--font-hud)',
               fontSize: '0.85rem',
+              fontWeight: 600,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
+              transition: 'all 0.15s ease',
             }}
           >
             <RotateCcw size={16} /> REPETIR
@@ -190,6 +193,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
                 justifyContent: 'center',
                 gap: '8px',
                 boxShadow: '0 0 15px rgba(0, 255, 163, 0.4)',
+                transition: 'all 0.15s ease',
               }}
             >
               SIGUIENTE NIVEL <ArrowRight size={16} />

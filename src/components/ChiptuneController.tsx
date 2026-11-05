@@ -53,16 +53,18 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
     <div
       className="neo-box"
       style={{
-        padding: '12px 18px',
+        padding: '14px 20px',
         marginBottom: '16px',
-        background: 'rgba(8, 12, 22, 0.92)',
+        background: 'rgba(8, 12, 22, 0.95)',
         border: isBeatBroken
-          ? '1px solid rgba(255, 51, 102, 0.4)'
-          : '1px solid rgba(0, 240, 255, 0.4)',
-        transition: 'border-color 0.2s ease',
+          ? '1px solid rgba(255, 51, 102, 0.5)'
+          : '1px solid rgba(0, 240, 255, 0.35)',
+        boxShadow: isBeatBroken
+          ? '0 0 15px rgba(255, 51, 102, 0.2)'
+          : '0 0 15px rgba(0, 240, 255, 0.1)',
+        transition: 'all 0.2s ease',
       }}
     >
-      {/* Top Row: Track selector buttons + BPM & Volume */}
       <div
         style={{
           display: 'flex',
@@ -72,32 +74,43 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
           gap: '12px',
         }}
       >
-        {/* Play/Pause Button & Active Track Indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Play/Pause Button & BPM */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             onClick={handleTogglePlay}
             style={{
               background: isPlaying ? 'rgba(0, 255, 163, 0.2)' : 'rgba(0, 240, 255, 0.15)',
               border: `1px solid ${isPlaying ? 'var(--neon-green)' : 'var(--neon-cyan)'}`,
               color: isPlaying ? 'var(--neon-green)' : 'var(--neon-cyan)',
-              padding: '6px 14px',
+              padding: '7px 16px',
               borderRadius: '4px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '8px',
               fontFamily: 'var(--font-hud)',
-              fontSize: '0.75rem',
+              fontSize: '0.8rem',
               letterSpacing: '1px',
-              boxShadow: isPlaying ? '0 0 10px rgba(0, 255, 163, 0.3)' : 'none',
+              fontWeight: 700,
+              boxShadow: isPlaying ? '0 0 12px rgba(0, 255, 163, 0.35)' : 'none',
               transition: 'all 0.15s ease',
             }}
           >
-            {isPlaying ? <Pause size={14} /> : <Play size={14} />}
+            {isPlaying ? <Pause size={15} /> : <Play size={15} />}
             {isPlaying ? 'PAUSAR BEAT' : 'INICIAR BEAT'}
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(0, 0, 0, 0.4)',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+            }}
+          >
             <Disc
               size={16}
               color={isBeatBroken ? '#ff3366' : 'var(--neon-cyan)'}
@@ -111,6 +124,7 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
                 fontSize: '0.75rem',
                 color: isBeatBroken ? '#ff3366' : 'var(--neon-cyan)',
                 letterSpacing: '1px',
+                fontWeight: 700,
               }}
             >
               {currentTrack.bpm} BPM
@@ -118,8 +132,11 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
           </div>
         </div>
 
-        {/* Track Selector Chips */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+        {/* Track Selector Cards */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)' }}>
+            BEATS:
+          </span>
           {CHIPTUNE_TRACKS.map((track) => {
             const isSelected = track.id === currentTrack.id;
             return (
@@ -130,14 +147,16 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
                   background: isSelected ? 'rgba(0, 255, 163, 0.2)' : 'rgba(0, 0, 0, 0.4)',
                   border: isSelected
                     ? '1px solid var(--neon-green)'
-                    : '1px solid rgba(255, 255, 255, 0.1)',
+                    : '1px solid rgba(255, 255, 255, 0.12)',
                   color: isSelected ? 'var(--neon-green)' : 'var(--text-secondary)',
                   fontFamily: 'var(--font-hud)',
-                  fontSize: '0.65rem',
-                  padding: '4px 10px',
+                  fontSize: '0.7rem',
+                  padding: '6px 12px',
                   borderRadius: '3px',
                   cursor: 'pointer',
                   letterSpacing: '0.5px',
+                  fontWeight: isSelected ? 700 : 500,
+                  boxShadow: isSelected ? '0 0 10px rgba(0, 255, 163, 0.3)' : 'none',
                   transition: 'all 0.15s ease',
                 }}
               >
@@ -147,7 +166,7 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
           })}
         </div>
 
-        {/* Volume Slider & Last Note Display */}
+        {/* Live Note & Volume Control */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           {lastNote && (
             <div
@@ -156,26 +175,37 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
                 alignItems: 'center',
                 gap: '6px',
                 background: 'rgba(0, 240, 255, 0.15)',
-                padding: '2px 8px',
-                borderRadius: '3px',
-                border: '1px solid rgba(0, 240, 255, 0.3)',
+                padding: '4px 10px',
+                borderRadius: '4px',
+                border: '1px solid rgba(0, 240, 255, 0.35)',
+                boxShadow: '0 0 8px rgba(0, 240, 255, 0.2)',
               }}
             >
-              <Music2 size={12} color="var(--neon-cyan)" />
+              <Music2 size={13} color="var(--neon-cyan)" />
               <span
                 style={{
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '0.7rem',
+                  fontSize: '0.75rem',
                   color: 'var(--neon-cyan)',
                   fontWeight: 700,
                 }}
               >
-                {lastNote.note}
+                NOTA: {lastNote.note}
               </span>
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'rgba(0, 0, 0, 0.35)',
+              padding: '4px 10px',
+              borderRadius: '4px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+            }}
+          >
             <Volume2 size={14} color="var(--text-secondary)" />
             <input
               type="range"
@@ -185,12 +215,15 @@ export const ChiptuneController: React.FC<ChiptuneControllerProps> = ({
               value={volume}
               onChange={handleVolumeChange}
               style={{
-                width: '70px',
+                width: '75px',
                 accentColor: 'var(--neon-cyan)',
                 cursor: 'pointer',
               }}
               title="Volumen del Beat de Fondo"
             />
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', minWidth: '28px' }}>
+              {Math.round(volume * 100)}%
+            </span>
           </div>
         </div>
       </div>

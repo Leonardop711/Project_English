@@ -281,6 +281,7 @@ export function App() {
 
         {/* Virtual Keyboard & Quick Macros */}
         <VirtualCyberKeyboard
+          language={currentLanguage}
           onKeyClick={handleKeyPress}
           onBackspace={handleBackspace}
           onEnter={() => handleKeyPress('\n')}

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Terminal, Sparkles, RefreshCw, Play, CheckCircle2, AlertTriangle, BookOpen } from 'lucide-react';
+import { Terminal, Sparkles, RefreshCw, Play, CheckCircle2, AlertTriangle, BookOpen, Cpu } from 'lucide-react';
 import { Level } from '../types';
 
 interface CodeEditorArenaProps {
@@ -49,18 +49,20 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
 
     if (e.key === 'Tab') {
       e.preventDefault();
-      onKeyPress('    '); // 4 spaces for indentation (Python standard)
+      onKeyPress('    '); // 4 spaces
       return;
     }
 
-    // Single character input
     if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
       e.preventDefault();
       onKeyPress(e.key);
     }
   };
 
-  // Render character tokens
+  const isLevelFinished = isCompleted || (userInput.length >= targetCode.length && userInput === targetCode);
+  const progressPercent = Math.min(100, Math.round((Math.min(userInput.length, targetCode.length) / targetCode.length) * 100));
+
+  // Render character tokens with syntax-like styling
   const renderCodeTokens = () => {
     const chars: React.ReactNode[] = [];
     const minLength = Math.max(userInput.length, targetCode.length);
@@ -81,6 +83,16 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
         charDisplay = '·';
       }
 
+      // Syntax-aware token coloring for pending code
+      let basePendingColor = 'rgba(255, 255, 255, 0.4)';
+      if (/[0-9]/.test(targetChar)) {
+        basePendingColor = 'rgba(255, 215, 0, 0.5)';
+      } else if (/['"`]/.test(targetChar)) {
+        basePendingColor = 'rgba(0, 255, 163, 0.5)';
+      } else if (/[(){}[\];:]/.test(targetChar)) {
+        basePendingColor = 'rgba(0, 240, 255, 0.5)';
+      }
+
       chars.push(
         <span
           key={i}
@@ -97,8 +109,8 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
             display: targetChar === '\n' ? 'block' : 'inline',
             padding: '1px 0px',
             fontFamily: 'var(--font-mono)',
-            fontSize: '1.25rem',
-            lineHeight: '1.8',
+            fontSize: '1.3rem',
+            lineHeight: '1.9',
             transition: 'color 0.1s ease',
             color: isError
               ? '#ff3366'
@@ -106,8 +118,14 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
               ? 'var(--neon-green)'
               : isCurrent
               ? '#ffffff'
-              : 'rgba(255, 255, 255, 0.35)',
-            textShadow: isCorrect ? '0 0 8px rgba(0, 255, 163, 0.6)' : isError ? '0 0 8px #ff3366' : 'none',
+              : basePendingColor,
+            textShadow: isCorrect
+              ? '0 0 10px rgba(0, 255, 163, 0.7)'
+              : isError
+              ? '0 0 12px #ff3366'
+              : isCurrent
+              ? '0 0 8px #ffffff'
+              : 'none',
           }}
         >
           {isCurrent && <span className="cyber-cursor" />}
@@ -119,8 +137,6 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
     return chars;
   };
 
-  const isLevelFinished = isCompleted || (userInput.length >= targetCode.length && userInput === targetCode);
-
   const getLanguageTag = () => {
     switch (currentLevel.language) {
       case 'python':
@@ -128,7 +144,7 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
       case 'javascript':
         return { label: 'JAVASCRIPT V8', color: 'var(--neon-cyan)' };
       case 'c':
-        return { label: 'C GCC 14', color: 'var(--neon-magenta)' };
+        return { label: 'C GCC 14.2', color: 'var(--neon-magenta)' };
       default:
         return { label: 'CODE ENGINE', color: 'var(--neon-cyan)' };
     }
@@ -141,14 +157,21 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
       onClick={handleContainerClick}
       className={`neo-box ${isBeatBroken || hasGlitch ? 'neo-box-danger glitch-active' : ''}`}
       style={{
-        padding: '20px',
+        padding: '0px',
         position: 'relative',
         cursor: 'text',
-        minHeight: '260px',
+        minHeight: '300px',
         display: 'flex',
         flexDirection: 'column',
         marginBottom: '16px',
-        transition: 'border-color 0.15s ease',
+        overflow: 'hidden',
+        border: isBeatBroken
+          ? '1px solid #ff3366'
+          : '1px solid rgba(0, 240, 255, 0.4)',
+        boxShadow: isBeatBroken
+          ? '0 0 20px rgba(255, 51, 102, 0.3)'
+          : '0 0 20px rgba(0, 240, 255, 0.15)',
+        transition: 'all 0.2s ease',
       }}
     >
       {/* Invisible input to capture all key events */}
@@ -168,42 +191,55 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
         aria-label="Editor de código"
       />
 
-      {/* Editor Header Bar */}
+      {/* Top IDE Window Header (macOS Terminal Style) */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          borderBottom: '1px solid rgba(0, 240, 255, 0.2)',
-          paddingBottom: '10px',
-          marginBottom: '14px',
+          background: 'rgba(5, 7, 13, 0.95)',
+          padding: '10px 16px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <Terminal size={18} color={tag.color} />
-          <span
-            style={{
-              fontFamily: 'var(--font-hud)',
-              fontSize: '0.85rem',
-              color: tag.color,
-              letterSpacing: '1px',
-            }}
-          >
-            {tag.label}
-          </span>
-          <span
-            style={{
-              fontSize: '0.7rem',
-              background: 'rgba(255, 255, 255, 0.08)',
-              padding: '2px 8px',
-              borderRadius: '2px',
-              color: 'var(--text-secondary)',
-              fontFamily: 'var(--font-hud)',
-            }}
-          >
-            {currentLevel.category}
-          </span>
+        {/* Terminal Window Dots + Language Badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f56', display: 'inline-block' }} />
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ffbd2e', display: 'inline-block' }} />
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#27c93f', display: 'inline-block' }} />
+          </div>
 
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Terminal size={16} color={tag.color} />
+            <span
+              style={{
+                fontFamily: 'var(--font-hud)',
+                fontSize: '0.8rem',
+                color: tag.color,
+                letterSpacing: '1px',
+                fontWeight: 700,
+              }}
+            >
+              {tag.label}
+            </span>
+            <span
+              style={{
+                fontSize: '0.65rem',
+                background: 'rgba(255, 255, 255, 0.06)',
+                padding: '2px 8px',
+                borderRadius: '3px',
+                color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-hud)',
+              }}
+            >
+              {currentLevel.category}
+            </span>
+          </div>
+        </div>
+
+        {/* Status Alerts & Reset */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {isBeatBroken && (
             <span
               style={{
@@ -211,20 +247,19 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
                 background: 'rgba(255, 51, 102, 0.2)',
                 border: '1px solid #ff3366',
                 color: '#ff3366',
-                padding: '2px 8px',
-                borderRadius: '2px',
+                padding: '3px 10px',
+                borderRadius: '3px',
                 fontFamily: 'var(--font-hud)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '5px',
+                animation: 'pulse 1s infinite',
               }}
             >
-              <AlertTriangle size={12} /> ¡BEAT CORTADO! BORRA CON BACKSPACE
+              <AlertTriangle size={13} /> ¡BEAT CORTADO! PULSA BACKSPACE
             </span>
           )}
-        </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -244,144 +279,165 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
               fontFamily: 'var(--font-hud)',
             }}
           >
-            <RefreshCw size={14} /> REINICIAR
+            <RefreshCw size={13} /> REINICIAR
           </button>
         </div>
       </div>
 
-      {/* Educational Concept Box ("Aprende el Concepto") */}
-      <div
-        style={{
-          marginBottom: '14px',
-          padding: '12px 16px',
-          background: 'rgba(0, 0, 0, 0.5)',
-          borderLeft: `4px solid ${tag.color}`,
-          borderRadius: '3px',
-          fontSize: '0.88rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '6px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: tag.color, fontWeight: 700, fontSize: '0.8rem', fontFamily: 'var(--font-hud)' }}>
-          <BookOpen size={14} /> ¿QUÉ HACE ESTE CÓDIGO?
-        </div>
-        <div style={{ color: '#e0e6ed', lineHeight: '1.4' }}>
-          {currentLevel.conceptTip}
-        </div>
-        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-          <Sparkles size={13} color="var(--neon-yellow)" /> <strong style={{ color: 'var(--neon-yellow)' }}>Sintaxis:</strong> {currentLevel.syntaxGuide}
-        </div>
-      </div>
-
-      {/* Code Editor Box with Line Numbers */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '16px',
-          fontFamily: 'var(--font-mono)',
-          background: 'rgba(5, 7, 13, 0.95)',
-          padding: '20px',
-          borderRadius: '4px',
-          border: isBeatBroken ? '1px solid #ff3366' : '1px solid rgba(255, 255, 255, 0.08)',
-          minHeight: '120px',
-          overflowX: 'auto',
-          whiteSpace: 'pre-wrap',
-          wordBreak: 'break-all',
-          boxShadow: isBeatBroken ? 'inset 0 0 15px rgba(255, 51, 102, 0.2)' : 'none',
-        }}
-      >
-        {/* Line Numbers */}
+      {/* Progress Bar Header */}
+      <div style={{ width: '100%', height: '3px', background: 'rgba(255, 255, 255, 0.06)' }}>
         <div
           style={{
-            userSelect: 'none',
-            color: 'var(--text-muted)',
-            textAlign: 'right',
-            paddingRight: '12px',
-            borderRight: '1px solid rgba(255, 255, 255, 0.1)',
-            fontSize: '1.25rem',
-            lineHeight: '1.8',
+            height: '100%',
+            width: `${progressPercent}%`,
+            background: isBeatBroken
+              ? '#ff3366'
+              : 'linear-gradient(90deg, var(--neon-cyan), var(--neon-green))',
+            boxShadow: isBeatBroken ? '0 0 8px #ff3366' : '0 0 8px var(--neon-green)',
+            transition: 'width 0.15s ease',
           }}
-        >
-          {targetCode.split('\n').map((_, i) => (
-            <div key={i}>{i + 1}</div>
-          ))}
-        </div>
-
-        {/* Code Content */}
-        <div style={{ flex: 1 }}>{renderCodeTokens()}</div>
+        />
       </div>
 
-      {/* Live Compiler Execution Terminal (Interactive Output Box) */}
-      <div
-        style={{
-          marginTop: '14px',
-          background: 'rgba(2, 4, 8, 0.95)',
-          border: isLevelFinished ? '1px solid var(--neon-green)' : '1px solid rgba(0, 240, 255, 0.2)',
-          borderRadius: '4px',
-          padding: '12px 16px',
-          fontFamily: 'var(--font-mono)',
-          fontSize: '0.85rem',
-          boxShadow: isLevelFinished ? '0 0 15px rgba(0, 255, 163, 0.3)' : 'none',
-          transition: 'all 0.2s ease',
-        }}
-      >
+      {/* Main Body with Concept Box and Code Editor */}
+      <div style={{ padding: '16px 20px' }}>
+        {/* Educational Concept Card */}
+        <div
+          style={{
+            marginBottom: '14px',
+            padding: '12px 16px',
+            background: 'rgba(0, 0, 0, 0.45)',
+            borderLeft: `4px solid ${tag.color}`,
+            borderRadius: '4px',
+            fontSize: '0.88rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: tag.color, fontWeight: 700, fontSize: '0.8rem', fontFamily: 'var(--font-hud)' }}>
+            <BookOpen size={14} /> APRENDE EL CONCEPTO
+          </div>
+          <div style={{ color: '#e2e8f0', lineHeight: '1.45' }}>
+            {currentLevel.conceptTip}
+          </div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+            <Sparkles size={13} color="var(--neon-yellow)" />
+            <strong style={{ color: 'var(--neon-yellow)' }}>Sintaxis Clave:</strong> {currentLevel.syntaxGuide}
+          </div>
+        </div>
+
+        {/* Code Editor Box with Line Numbers */}
         <div
           style={{
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '6px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-            paddingBottom: '4px',
+            gap: '16px',
+            fontFamily: 'var(--font-mono)',
+            background: 'rgba(4, 6, 11, 0.96)',
+            padding: '18px',
+            borderRadius: '4px',
+            border: isBeatBroken ? '1px solid #ff3366' : '1px solid rgba(255, 255, 255, 0.08)',
+            minHeight: '120px',
+            overflowX: 'auto',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-all',
+            boxShadow: isBeatBroken ? 'inset 0 0 15px rgba(255, 51, 102, 0.2)' : 'none',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.7rem', fontFamily: 'var(--font-hud)' }}>
-            <Play size={12} color={isLevelFinished ? 'var(--neon-green)' : 'var(--neon-cyan)'} />
-            CONSOLA DE SALIDA EN VIVO // EXECUTION OUTPUT
+          {/* Line Numbers */}
+          <div
+            style={{
+              userSelect: 'none',
+              color: 'var(--text-muted)',
+              textAlign: 'right',
+              paddingRight: '14px',
+              borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+              fontSize: '1.3rem',
+              lineHeight: '1.9',
+            }}
+          >
+            {targetCode.split('\n').map((_, i) => (
+              <div key={i}>{i + 1}</div>
+            ))}
           </div>
-          <div style={{ fontSize: '0.7rem', color: isLevelFinished ? 'var(--neon-green)' : 'var(--text-muted)' }}>
-            {isLevelFinished ? (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--neon-green)' }}>
-                <CheckCircle2 size={12} /> CÓDIGO EJECUTADO CON ÉXITO
-              </span>
-            ) : (
-              'EN ESPERA DEL BEAT...'
-            )}
-          </div>
+
+          {/* Code Content */}
+          <div style={{ flex: 1 }}>{renderCodeTokens()}</div>
         </div>
 
-        {isLevelFinished ? (
-          <div style={{ color: 'var(--neon-green)', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
-            <span style={{ color: 'var(--text-muted)' }}>$ run {currentLevel.language}_program</span>
-            {'\n'}
-            {currentLevel.expectedOutput}
+        {/* Live Compiler Execution Terminal */}
+        <div
+          style={{
+            marginTop: '14px',
+            background: 'rgba(2, 4, 8, 0.95)',
+            border: isLevelFinished ? '1px solid var(--neon-green)' : '1px solid rgba(0, 240, 255, 0.2)',
+            borderRadius: '4px',
+            padding: '12px 16px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.85rem',
+            boxShadow: isLevelFinished ? '0 0 15px rgba(0, 255, 163, 0.25)' : 'none',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '6px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+              paddingBottom: '4px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.7rem', fontFamily: 'var(--font-hud)' }}>
+              <Play size={12} color={isLevelFinished ? 'var(--neon-green)' : 'var(--neon-cyan)'} />
+              TERMINAL // SALIDA DEL COMPILADOR EN VIVO
+            </div>
+            <div style={{ fontSize: '0.7rem', color: isLevelFinished ? 'var(--neon-green)' : 'var(--text-muted)' }}>
+              {isLevelFinished ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--neon-green)' }}>
+                  <CheckCircle2 size={12} /> COMPILACIÓN EXITOSA (0 ERRORS)
+                </span>
+              ) : (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Cpu size={12} /> ESPERANDO EJECUCIÓN...
+                </span>
+              )}
+            </div>
           </div>
-        ) : (
-          <div style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
-            Teclea la línea completa sin romper el beat para compilar y ejecutar el resultado aquí.
-          </div>
-        )}
-      </div>
 
-      {/* Footer Info */}
-      <div
-        style={{
-          marginTop: '10px',
-          fontSize: '0.75rem',
-          color: 'var(--text-muted)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '8px',
-        }}
-      >
-        <span>
-          💡 <strong style={{ color: 'var(--neon-cyan)' }}>Don't Break the Beat:</strong> Si te equivocas, la música se corta hasta corregir.
-        </span>
-        <span>
-          Progreso: {Math.min(userInput.length, targetCode.length)} / {targetCode.length} caracteres
-        </span>
+          {isLevelFinished ? (
+            <div style={{ color: 'var(--neon-green)', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+              <span style={{ color: 'var(--text-muted)' }}>$ execute {currentLevel.language}_program</span>
+              {'\n'}
+              {currentLevel.expectedOutput}
+            </div>
+          ) : (
+            <div style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
+              Escribe el código sin romper el beat para compilarlo en tiempo real aquí.
+            </div>
+          )}
+        </div>
+
+        {/* Footer Info */}
+        <div
+          style={{
+            marginTop: '10px',
+            fontSize: '0.75rem',
+            color: 'var(--text-muted)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '8px',
+          }}
+        >
+          <span>
+            💡 <strong style={{ color: 'var(--neon-cyan)' }}>Nota por tecla:</strong> Cada letra, símbolo y espacio tiene su propia nota musical afinada.
+          </span>
+          <span>
+            Progreso: {Math.min(userInput.length, targetCode.length)} / {targetCode.length} ({progressPercent}%)
+          </span>
+        </div>
       </div>
     </div>
   );

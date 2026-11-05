@@ -28,8 +28,8 @@ export const NOTE_FREQS: Record<string, number> = {
 export const CHIPTUNE_TRACKS: ChiptuneTrack[] = [
   {
     id: 'bangarang-beat',
-    title: 'BANGARANG 8-BIT DRUM GROOVE',
-    author: 'SKRILLEX 8-BIT APU',
+    title: 'BANGARANG DRUM & BASS GROOVE',
+    author: 'SKRILLEX GROOVE',
     bpm: 110,
     description: 'Base rítmica Moombahton / Dubstep a 110 BPM para acompañar tu tecleo de Bangarang.',
     lead: [
@@ -47,6 +47,29 @@ export const CHIPTUNE_TRACKS: ChiptuneTrack[] = [
     drums: [
       'K', '-', 'H', '-', 'S', '-', 'H', '-',
       'K', '-', 'H', 'K', 'S', '-', 'H', 'H'
+    ]
+  },
+  {
+    id: 'blinding-lights-beat',
+    title: 'SYNTHWAVE 80S DRUM GROOVE',
+    author: 'RETRO 80S',
+    bpm: 171,
+    description: 'Batería Synthwave clásica a 171 BPM con caja con reverb y bajo Moog.',
+    lead: [
+      '-', '-', '-', '-', '-', '-', '-', '-',
+      '-', '-', '-', '-', '-', '-', '-', '-'
+    ],
+    arp: [
+      'F4', '-', 'F4', '-', 'Eb4', '-', 'Eb4', '-',
+      'Bb4', '-', 'Bb4', '-', 'C5', '-', 'C5', '-'
+    ],
+    bass: [
+      'F2', 'F2', 'F2', 'F2', 'Eb2', 'Eb2', 'Eb2', 'Eb2',
+      'Bb2', 'Bb2', 'Bb2', 'Bb2', 'C3', 'C3', 'C3', 'C3'
+    ],
+    drums: [
+      'K', 'H', 'H', 'H', 'S', 'H', 'H', 'H',
+      'K', 'H', 'K', 'H', 'S', 'H', 'H', 'H'
     ]
   },
   {

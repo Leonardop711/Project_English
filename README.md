@@ -22,19 +22,20 @@ Abre en tu navegador la dirección indicada (por defecto `http://localhost:3000`
    - Cada pulsación correcta genera notas afinadas en la escala **Cyber Synth Pentatonic / Synthwave** (Re menor / D minor).
    - Los diferentes tokens del lenguaje (palabras clave, cadenas de texto, llaves, puntos y espacios) activan modulaciones, filtros y armónicos específicos.
 
-2. **Pistas de Música 8-Bit Chiptune Reactivas (APU)**:
-   - Reproductor integrado con 4 canales retro reales: **Onda cuadrada (Lead), Arpegio rápido, Bajo triangular (NES) y Batería de ruido blanco**.
-   - **4 Pistas Retro 8-Bit disponibles**:
-     - *01: 8-Bit Cyber Genesis (125 BPM)*
-     - *02: Neo Megaman Rush (138 BPM)*
-     - *03: Quantum Chip Hazard (120 BPM)*
-     - *04: Overclock 8-Bit Climax (148 BPM)*
-   - **Evolución por Combo**:
-     - Base: Bajo triangular + Batería 8-bit.
-     - Combo 5+: Se activa el canal melódico principal (*Lead*).
-     - Combo 10+: Se activa el canal de arpegios rápidos (*Arp*).
-     - Combo 20+: Modo *Overdrive* con brillo y vibrato armónico completo.
-   - **Reacción a Fallos**: Al fallar un carácter, la pista 8-bit sufre un *pitch-drop* y glitch momentáneo antes de volver al ritmo base.
+2. **Estudio Sintético Reactivo & Perfiles de Sonido (Hi-Fi)**:
+   - **4 Perfiles Tímbricos de Sonido**:
+     - ⚡ **Neo-Synthwave (Hi-Fi - Recomendado)**: Supersaw analógico cálido, filtro Moog 24dB, reverberación espacial y delay estéreo.
+     - 🎹 **Cyber Rhodes (Lo-Fi Chill)**: Piano eléctrico con síntesis FM aterciopelada, campanas armónicas y acordes jazz/cyber súper relajantes.
+     - 🎧 **Modern EDM & Pluck**: Pluck punchy de festival con sub-bajo contundente y percusión nítida.
+     - 👾 **Arcade 8-Bit (Clásico)**: Onda cuadrada y triangular retro estilo GameBoy/NES original.
+   - **Melodías Sincronizadas Nota por Nota al Teclear**:
+     - 🔥 *Skrillex - Bangarang* (con bajo growl dubstep WUB-WUB analógico en Hi-Fi o 8-bit).
+     - 🏎️ *The Weeknd - Blinding Lights* (riff synthwave 80s súper pegadizo).
+     - 🤖 *Daft Punk - Harder, Better, Faster*.
+     - ⚡ *Darude - Sandstorm*.
+   - **Guía Rítmica Visual & Batería Groover**:
+     - **Metrónomo visual de 4 tiempos (`[1] [2] [3] [4]`)**: Pulsos LED que parpadean al tempo exacto para que nunca pierdas el ritmo.
+     - **Batería moderna Punchy EDM / Synthwave**: Bombo nítido, caja estéreo, hi-hat metálico y bajo cálido de acompañamiento con volumen regulable.
 
 3. **Combo Perfecto y Armonía Sónica**:
    - Mantener una racha sin errores incrementa el **Combo** y desbloquea multiplicadores (x1.5, x2.0, x4.0).

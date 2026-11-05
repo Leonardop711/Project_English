@@ -6,6 +6,7 @@ import { VirtualCyberKeyboard } from './components/VirtualCyberKeyboard';
 import { VictoryModal } from './components/VictoryModal';
 import { LevelSelectorModal } from './components/LevelSelectorModal';
 import { ChiptuneController } from './components/ChiptuneController';
+import { GeometryDashBackground } from './components/GeometryDashBackground';
 import { INITIAL_LEVELS } from './data/levels';
 import { Level, GameStats, Language } from './types';
 import { synthEngine } from './audio/SynthEngine';
@@ -236,8 +237,18 @@ export function App() {
     };
   }, []);
 
+  const currentBpm = chiptunePlayer.getCurrentTrack().bpm;
+
   return (
     <div style={{ minHeight: '100vh', position: 'relative', padding: '16px 20px 40px' }}>
+      {/* Geometry Dash Parallax & Interactive Animated Background */}
+      <GeometryDashBackground
+        bpm={currentBpm}
+        combo={stats.combo}
+        isBeatBroken={isBeatBroken}
+        hasGlitch={hasGlitch}
+      />
+
       {/* CRT Scanline & Ambient Filter Layers */}
       <div className="scanlines-overlay" />
       <div className="cyber-vignette" />

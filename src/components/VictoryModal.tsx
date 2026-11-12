@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { Award, Zap, CheckCircle2, ArrowRight, RotateCcw, Music } from 'lucide-react';
+import { Award, ArrowRight, RotateCcw, Flame, CheckCircle2, X, Terminal } from 'lucide-react';
 import { Level, GameStats } from '../types';
 
 interface VictoryModalProps {
@@ -9,6 +9,7 @@ interface VictoryModalProps {
   hasNextLevel: boolean;
   onNextLevel: () => void;
   onReplay: () => void;
+  onClose?: () => void;
 }
 
 export const VictoryModal: React.FC<VictoryModalProps> = ({
@@ -17,18 +18,20 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   hasNextLevel,
   onNextLevel,
   onReplay,
+  onClose,
 }) => {
   const isPerfect = stats.errors === 0;
   const timeTaken = stats.startTime && stats.endTime ? Math.max(1, Math.round((stats.endTime - stats.startTime) / 1000)) : 1;
   const cpm = Math.round((stats.keystrokes / timeTaken) * 60);
+  const wpm = Math.round(cpm / 5);
+  const accuracy = stats.keystrokes > 0 ? Math.round(((stats.keystrokes - stats.errors) / stats.keystrokes) * 100) : 100;
 
   useEffect(() => {
-    // Launch Neo-Tech Cyber Confetti
     confetti({
-      particleCount: isPerfect ? 120 : 60,
-      spread: 80,
+      particleCount: isPerfect ? 140 : 80,
+      spread: 90,
       origin: { y: 0.6 },
-      colors: isPerfect ? ['#00f0ff', '#ffd700', '#00ff66', '#ff0055'] : ['#00f0ff', '#8b5cf6'],
+      colors: isPerfect ? ['#00ff9d', '#00f0ff', '#ffd700', '#ff0055'] : ['#00f0ff', '#8b5cf6', '#00ff9d'],
     });
   }, [isPerfect]);
 
@@ -40,7 +43,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
         left: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: 'rgba(5, 7, 13, 0.85)',
+        backgroundColor: 'rgba(5, 7, 13, 0.88)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
@@ -52,166 +55,202 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
       <div
         className="neo-box"
         style={{
-          maxWidth: '520px',
+          maxWidth: '560px',
           width: '100%',
-          padding: '30px',
-          background: 'rgba(10, 14, 25, 0.95)',
+          padding: '28px',
+          background: 'rgba(10, 14, 25, 0.98)',
           textAlign: 'center',
-          animation: 'scaleIn 0.3s ease-out',
+          position: 'relative',
+          border: isPerfect ? '2px solid var(--neon-green)' : '1px solid var(--neon-cyan)',
+          boxShadow: isPerfect ? '0 0 30px rgba(0, 255, 163, 0.4)' : '0 0 25px rgba(0, 240, 255, 0.3)',
         }}
       >
+        {/* Top Close Button to return and inspect code & terminal */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            aria-label="Close and view terminal"
+            title="Close to inspect terminal and code"
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '16px',
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '0.75rem',
+              fontFamily: 'var(--font-hud)',
+            }}
+          >
+            <X size={20} />
+          </button>
+        )}
+
         {/* Header Icon */}
         <div
           style={{
             display: 'inline-flex',
             padding: '16px',
             borderRadius: '50%',
-            background: isPerfect ? 'rgba(255, 215, 0, 0.15)' : 'rgba(0, 240, 255, 0.15)',
-            border: `2px solid ${isPerfect ? 'var(--neon-yellow)' : 'var(--neon-cyan)'}`,
-            marginBottom: '16px',
-            boxShadow: isPerfect ? '0 0 25px rgba(255, 215, 0, 0.6)' : '0 0 25px rgba(0, 240, 255, 0.6)',
+            background: isPerfect ? 'rgba(0, 255, 163, 0.15)' : 'rgba(0, 240, 255, 0.15)',
+            border: `2px solid ${isPerfect ? 'var(--neon-green)' : 'var(--neon-cyan)'}`,
+            marginBottom: '14px',
+            boxShadow: isPerfect ? '0 0 25px rgba(0, 255, 163, 0.6)' : '0 0 25px rgba(0, 240, 255, 0.5)',
           }}
         >
-          {isPerfect ? <Zap size={36} color="var(--neon-yellow)" /> : <Award size={36} color="var(--neon-cyan)" />}
+          {isPerfect ? <Flame size={36} color="var(--neon-green)" /> : <Award size={36} color="var(--neon-cyan)" />}
         </div>
 
         {/* Title */}
         <h2
           style={{
             fontFamily: 'var(--font-hud)',
-            fontSize: '1.8rem',
-            color: isPerfect ? 'var(--neon-yellow)' : 'var(--neon-cyan)',
-            letterSpacing: '2px',
+            fontSize: '1.75rem',
+            color: isPerfect ? 'var(--neon-green)' : 'var(--neon-cyan)',
+            letterSpacing: '1.5px',
             marginBottom: '4px',
+            fontWeight: 700,
           }}
         >
-          {isPerfect ? '¡COMBO PERFECTO!' : '¡NIVEL COMPLETADO!'}
+          {isPerfect ? 'PERFECT RHYTHM! // 0 ERRORS' : 'LEVEL COMPLETED!'}
         </h2>
         <div
           style={{
             fontFamily: 'var(--font-hud)',
             fontSize: '0.85rem',
-            color: 'var(--neon-cyan)',
+            color: 'var(--text-secondary)',
             letterSpacing: '1px',
-            marginBottom: '8px',
+            marginBottom: '14px',
           }}
         >
           {level.name}
         </div>
-        <p
+
+        {/* Code Output Result Box */}
+        <div
           style={{
-            color: isPerfect ? 'var(--neon-green)' : 'var(--text-secondary)',
-            fontSize: '0.95rem',
-            marginBottom: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
+            background: 'rgba(0, 0, 0, 0.65)',
+            border: '1px solid rgba(0, 255, 163, 0.35)',
+            borderRadius: '4px',
+            padding: '14px 18px',
+            marginBottom: '18px',
+            textAlign: 'left',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.9rem',
+            color: 'var(--neon-green)',
+            boxShadow: 'inset 0 0 15px rgba(0, 255, 163, 0.1)',
           }}
         >
-          <Music size={16} />
-          {isPerfect
-            ? 'La melodía sonó con armonía perfecta sin distorsión alguna.'
-            : 'Compilación superada. Afina tu código para lograr el combo perfecto.'}
-        </p>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <CheckCircle2 size={14} color="var(--neon-green)" /> Standard Console Output (stdout):
+          </div>
+          <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5', fontWeight: 600 }}>{level.expectedOutput}</div>
+        </div>
 
         {/* Stats Grid */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '12px',
-            marginBottom: '26px',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '10px',
+            marginBottom: '20px',
           }}
         >
-          <div
-            style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              padding: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-            }}
-          >
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)' }}>
-              PRECISIÓN
-            </div>
-            <div
-              style={{
-                fontSize: '1.4rem',
-                fontFamily: 'var(--font-hud)',
-                color: isPerfect ? 'var(--neon-green)' : 'var(--neon-cyan)',
-                fontWeight: 700,
-              }}
-            >
-              {isPerfect ? '100%' : `${Math.round(((stats.keystrokes - stats.errors) / stats.keystrokes) * 100)}%`}
-            </div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '10px 6px', borderRadius: '4px' }}>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', fontWeight: 600 }}>WPM</div>
+            <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: 'var(--neon-cyan)', fontWeight: 700 }}>{wpm}</div>
           </div>
-
-          <div
-            style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              padding: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-            }}
-          >
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)' }}>
-              MÁX COMBO
-            </div>
-            <div
-              style={{
-                fontSize: '1.4rem',
-                fontFamily: 'var(--font-hud)',
-                color: 'var(--neon-yellow)',
-                fontWeight: 700,
-              }}
-            >
-              x{stats.maxCombo}
-            </div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '10px 6px', borderRadius: '4px' }}>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', fontWeight: 600 }}>ACCURACY</div>
+            <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: accuracy >= 95 ? 'var(--neon-green)' : 'var(--neon-yellow)', fontWeight: 700 }}>{accuracy}%</div>
           </div>
-
-          <div
-            style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              padding: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-            }}
-          >
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)' }}>
-              VELOCIDAD
-            </div>
-            <div
-              style={{
-                fontSize: '1.4rem',
-                fontFamily: 'var(--font-hud)',
-                color: 'var(--neon-cyan)',
-                fontWeight: 700,
-              }}
-            >
-              {cpm} <span style={{ fontSize: '0.7rem' }}>CPM</span>
-            </div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '10px 6px', borderRadius: '4px' }}>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', fontWeight: 600 }}>MAX COMBO</div>
+            <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: 'var(--neon-yellow)', fontWeight: 700 }}>{stats.maxCombo}</div>
+          </div>
+          <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '10px 6px', borderRadius: '4px' }}>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-hud)', fontWeight: 600 }}>TIME</div>
+            <div style={{ fontFamily: 'var(--font-hud)', fontSize: '1.3rem', color: '#fff', fontWeight: 700 }}>{timeTaken}s</div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button
             onClick={onReplay}
-            className="neo-button"
-            style={{ background: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.2)', color: '#fff' }}
+            style={{
+              flex: 1,
+              background: 'rgba(255, 255, 255, 0.06)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: 'var(--text-secondary)',
+              padding: '12px',
+              borderRadius: '4px',
+              fontFamily: 'var(--font-hud)',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.15s ease',
+            }}
           >
-            <RotateCcw size={16} /> REPETIR
+            <RotateCcw size={16} /> RETRY
           </button>
 
-          {hasNextLevel ? (
-            <button onClick={onNextLevel} className="neo-button">
-              SIGUIENTE NIVEL <ArrowRight size={16} />
-            </button>
-          ) : (
+          {onClose && (
             <button
-              onClick={onReplay}
-              className="neo-button"
-              style={{ background: 'var(--neon-green)', color: '#000' }}
+              onClick={onClose}
+              style={{
+                flex: 1,
+                background: 'rgba(0, 240, 255, 0.1)',
+                border: '1px solid rgba(0, 240, 255, 0.3)',
+                color: 'var(--neon-cyan)',
+                padding: '12px',
+                borderRadius: '4px',
+                fontFamily: 'var(--font-hud)',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                transition: 'all 0.15s ease',
+              }}
             >
-              <CheckCircle2 size={16} /> ¡HAS CONQUISTADO EL MAINFRAME!
+              <Terminal size={16} /> VIEW TERMINAL
+            </button>
+          )}
+
+          {hasNextLevel && (
+            <button
+              onClick={onNextLevel}
+              style={{
+                flex: 2,
+                background: 'rgba(0, 255, 163, 0.2)',
+                border: '1px solid var(--neon-green)',
+                color: 'var(--neon-green)',
+                padding: '12px',
+                borderRadius: '4px',
+                fontFamily: 'var(--font-hud)',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 0 15px rgba(0, 255, 163, 0.4)',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              NEXT LEVEL <ArrowRight size={16} />
             </button>
           )}
         </div>

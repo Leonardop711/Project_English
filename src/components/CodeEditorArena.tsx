@@ -1,28 +1,37 @@
 import React, { useEffect, useRef } from 'react';
-import { Terminal, Sparkles, RefreshCw } from 'lucide-react';
+import { Terminal, Sparkles, RefreshCw, Play, CheckCircle2, AlertTriangle, BookOpen, Cpu, ArrowRight, BarChart2, Lightbulb } from 'lucide-react';
 import { Level } from '../types';
 
 interface CodeEditorArenaProps {
   currentLevel: Level;
   userInput: string;
   hasGlitch: boolean;
+  isBeatBroken: boolean;
+  isCompleted?: boolean;
+  hasNextLevel?: boolean;
   onKeyPress: (char: string) => void;
   onBackspace: () => void;
   onResetLevel: () => void;
+  onNextLevel?: () => void;
+  onOpenStats?: () => void;
 }
 
 export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
   currentLevel,
   userInput,
   hasGlitch,
+  isBeatBroken,
+  isCompleted = false,
+  hasNextLevel = false,
   onKeyPress,
   onBackspace,
   onResetLevel,
+  onNextLevel,
+  onOpenStats,
 }) => {
   const hiddenInputRef = useRef<HTMLInputElement | null>(null);
   const targetCode = currentLevel.code;
 
-  // Keep input focused so mobile and desktop keyboard works effortlessly
   useEffect(() => {
     hiddenInputRef.current?.focus();
   }, [currentLevel]);
@@ -46,18 +55,24 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
 
     if (e.key === 'Tab') {
       e.preventDefault();
-      onKeyPress('  '); // Two spaces for tab
+      onKeyPress('    '); // 4 spaces
       return;
     }
 
-    // Only handle printable characters (length 1)
-    if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    const isAltGraph = typeof e.getModifierState === 'function' && e.getModifierState('AltGraph');
+    const isCtrlBlocked = e.ctrlKey && !isAltGraph;
+
+    // Single character input - allow Option (altKey) on Mac for symbols like ¡, ¿, ~, etc.
+    if (e.key.length === 1 && !isCtrlBlocked && !e.metaKey) {
       e.preventDefault();
       onKeyPress(e.key);
     }
   };
 
-  // Render character tokens
+  const isLevelFinished = isCompleted || (userInput.length >= targetCode.length && userInput === targetCode);
+  const progressPercent = Math.min(100, Math.round((Math.min(userInput.length, targetCode.length) / targetCode.length) * 100));
+
+  // Render character tokens with syntax-like styling
   const renderCodeTokens = () => {
     const chars: React.ReactNode[] = [];
     const minLength = Math.max(userInput.length, targetCode.length);
@@ -78,6 +93,16 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
         charDisplay = '·';
       }
 
+      // Syntax-aware token coloring for pending code
+      let basePendingColor = 'rgba(255, 255, 255, 0.4)';
+      if (/[0-9]/.test(targetChar)) {
+        basePendingColor = 'rgba(255, 215, 0, 0.5)';
+      } else if (/['"`]/.test(targetChar)) {
+        basePendingColor = 'rgba(0, 255, 163, 0.5)';
+      } else if (/[(){}[\];:]/.test(targetChar)) {
+        basePendingColor = 'rgba(0, 240, 255, 0.5)';
+      }
+
       chars.push(
         <span
           key={i}
@@ -94,9 +119,23 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
             display: targetChar === '\n' ? 'block' : 'inline',
             padding: '1px 0px',
             fontFamily: 'var(--font-mono)',
-            fontSize: '1.25rem',
-            lineHeight: '1.8',
+            fontSize: '1.3rem',
+            lineHeight: '1.9',
             transition: 'color 0.1s ease',
+            color: isError
+              ? '#ff3366'
+              : isCorrect
+              ? 'var(--neon-green)'
+              : isCurrent
+              ? '#ffffff'
+              : basePendingColor,
+            textShadow: isCorrect
+              ? '0 0 10px rgba(0, 255, 163, 0.7)'
+              : isError
+              ? '0 0 12px #ff3366'
+              : isCurrent
+              ? '0 0 8px #ffffff'
+              : 'none',
           }}
         >
           {isCurrent && <span className="cyber-cursor" />}
@@ -108,25 +147,58 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
     return chars;
   };
 
+  const getLanguageTag = () => {
+    switch (currentLevel.language) {
+      case 'python':
+        return { label: 'PYTHON 3.12', color: 'var(--neon-yellow)' };
+      case 'javascript':
+        return { label: 'JAVASCRIPT V8', color: 'var(--neon-cyan)' };
+      case 'c':
+        return { label: 'C GCC 14.2', color: 'var(--neon-magenta)' };
+      default:
+        return { label: 'CODE ENGINE', color: 'var(--neon-cyan)' };
+    }
+  };
+
+  const tag = getLanguageTag();
+
   return (
     <div
       onClick={handleContainerClick}
-      className={`neo-box ${hasGlitch ? 'neo-box-danger glitch-active' : ''}`}
+      className={`neo-box ${isBeatBroken || hasGlitch ? 'neo-box-danger glitch-active' : ''}`}
       style={{
-        padding: '20px',
+        padding: '0px',
         position: 'relative',
         cursor: 'text',
-        minHeight: '260px',
+        minHeight: '300px',
         display: 'flex',
         flexDirection: 'column',
+        marginBottom: '16px',
+        overflow: 'hidden',
+        border: isBeatBroken
+          ? '1px solid #ff3366'
+          : '1px solid rgba(0, 240, 255, 0.4)',
+        boxShadow: isBeatBroken
+          ? '0 0 20px rgba(255, 51, 102, 0.3)'
+          : '0 0 20px rgba(0, 240, 255, 0.15)',
+        transition: 'all 0.2s ease',
       }}
     >
-      {/* Invisible input to capture all key events on any device */}
+      {/* Invisible input to capture all key events */}
       <input
         ref={hiddenInputRef}
         type="text"
         autoFocus
         tabIndex={0}
+        value=""
+        onChange={(e) => {
+          const val = e.target.value;
+          if (val) {
+            for (const ch of val) {
+              onKeyPress(ch);
+            }
+          }
+        }}
         onKeyDown={handleKeyDown}
         style={{
           position: 'absolute',
@@ -138,50 +210,82 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
         aria-label="Editor de código"
       />
 
-      {/* Editor Header Bar */}
+      {/* Top IDE Window Header (macOS Terminal Style) */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          borderBottom: '1px solid rgba(0, 240, 255, 0.2)',
-          paddingBottom: '10px',
-          marginBottom: '16px',
+          background: 'rgba(5, 7, 13, 0.95)',
+          padding: '10px 16px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Terminal size={18} color="var(--neon-cyan)" />
-          <span
-            style={{
-              fontFamily: 'var(--font-hud)',
-              fontSize: '0.85rem',
-              color: 'var(--neon-cyan)',
-              letterSpacing: '1px',
-            }}
-          >
-            TERMINAL // COMPILADOR VIRTUAL
-          </span>
-          <span
-            style={{
-              fontSize: '0.75rem',
-              background: 'rgba(0, 240, 255, 0.1)',
-              padding: '2px 8px',
-              borderRadius: '2px',
-              color: 'var(--neon-cyan)',
-            }}
-          >
-            {currentLevel.category}
-          </span>
+        {/* Terminal Window Dots + Language Badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f56', display: 'inline-block' }} />
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ffbd2e', display: 'inline-block' }} />
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#27c93f', display: 'inline-block' }} />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Terminal size={16} color={tag.color} />
+            <span
+              style={{
+                fontFamily: 'var(--font-hud)',
+                fontSize: '0.8rem',
+                color: tag.color,
+                letterSpacing: '1px',
+                fontWeight: 700,
+              }}
+            >
+              {tag.label}
+            </span>
+            <span
+              style={{
+                fontSize: '0.65rem',
+                background: 'rgba(255, 255, 255, 0.06)',
+                padding: '2px 8px',
+                borderRadius: '3px',
+                color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-hud)',
+              }}
+            >
+              {currentLevel.category}
+            </span>
+          </div>
         </div>
 
+        {/* Status Alerts & Reset */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {isBeatBroken && (
+            <span
+              style={{
+                fontSize: '0.7rem',
+                background: 'rgba(255, 51, 102, 0.2)',
+                border: '1px solid #ff3366',
+                color: '#ff3366',
+                padding: '3px 10px',
+                borderRadius: '3px',
+                fontFamily: 'var(--font-hud)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                animation: 'pulse 1s infinite',
+              }}
+            >
+              <AlertTriangle size={13} /> BEAT BROKEN! PRESS BACKSPACE
+            </span>
+          )}
+
           <button
             onClick={(e) => {
               e.stopPropagation();
               onResetLevel();
               hiddenInputRef.current?.focus();
             }}
-            title="Reiniciar Nivel"
+            title="Reset Level"
             style={{
               background: 'transparent',
               border: 'none',
@@ -194,89 +298,317 @@ export const CodeEditorArena: React.FC<CodeEditorArenaProps> = ({
               fontFamily: 'var(--font-hud)',
             }}
           >
-            <RefreshCw size={14} /> REINICIAR
+            <RefreshCw size={13} /> RESET
           </button>
         </div>
       </div>
 
-      {/* Description & Mission Objective */}
-      <div
-        style={{
-          marginBottom: '16px',
-          padding: '10px 14px',
-          background: 'rgba(0, 0, 0, 0.4)',
-          borderLeft: '3px solid var(--neon-cyan)',
-          fontSize: '0.9rem',
-          color: 'var(--text-secondary)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '8px',
-        }}
-      >
-        <div>
-          <strong style={{ color: 'var(--neon-cyan)' }}>MISIÓN: </strong>
-          {currentLevel.description}
-        </div>
-        <div style={{ fontSize: '0.75rem', color: 'var(--neon-yellow)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <Sparkles size={14} /> {currentLevel.syntaxGuide}
-        </div>
-      </div>
-
-      {/* Code Area with Line Numbers */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '16px',
-          fontFamily: 'var(--font-mono)',
-          background: 'rgba(5, 7, 13, 0.95)',
-          padding: '20px',
-          borderRadius: '4px',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          minHeight: '140px',
-          overflowX: 'auto',
-          whiteSpace: 'pre-wrap',
-          wordBreak: 'break-all',
-        }}
-      >
-        {/* Line Numbers */}
+      {/* Progress Bar Header */}
+      <div style={{ width: '100%', height: '3px', background: 'rgba(255, 255, 255, 0.06)' }}>
         <div
           style={{
-            userSelect: 'none',
-            color: 'var(--text-muted)',
-            textAlign: 'right',
-            paddingRight: '12px',
-            borderRight: '1px solid rgba(255, 255, 255, 0.1)',
-            fontSize: '1.25rem',
-            lineHeight: '1.8',
+            height: '100%',
+            width: `${progressPercent}%`,
+            background: isBeatBroken
+              ? '#ff3366'
+              : 'linear-gradient(90deg, var(--neon-cyan), var(--neon-green))',
+            boxShadow: isBeatBroken ? '0 0 8px #ff3366' : '0 0 8px var(--neon-green)',
+            transition: 'width 0.15s ease',
           }}
-        >
-          {targetCode.split('\n').map((_, i) => (
-            <div key={i}>{i + 1}</div>
-          ))}
-        </div>
-
-        {/* Code Content */}
-        <div style={{ flex: 1 }}>{renderCodeTokens()}</div>
+        />
       </div>
 
-      {/* Footer Hint */}
-      <div
-        style={{
-          marginTop: '12px',
-          fontSize: '0.75rem',
-          color: 'var(--text-muted)',
-          display: 'flex',
-          justifyContent: 'space-between',
-        }}
-      >
-        <span>
-          💡 Escribe cada carácter con precisión musical. ¡Cada tecla correcta suena armónicamente!
-        </span>
-        <span>
-          Progreso: {Math.min(userInput.length, targetCode.length)} / {targetCode.length}
-        </span>
+      {/* Main Body with Concept Box, English Spotlight and Code Editor */}
+      <div style={{ padding: '16px 20px' }}>
+        {/* Educational Concept Card */}
+        <div
+          style={{
+            marginBottom: '14px',
+            padding: '12px 16px',
+            background: 'rgba(0, 0, 0, 0.45)',
+            borderLeft: `4px solid ${tag.color}`,
+            borderRadius: '4px',
+            fontSize: '0.88rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: tag.color, fontWeight: 700, fontSize: '0.8rem', fontFamily: 'var(--font-hud)' }}>
+            <BookOpen size={14} /> LEARN THE CONCEPT
+          </div>
+          <div style={{ color: '#e2e8f0', lineHeight: '1.45' }}>
+            {currentLevel.conceptTip}
+          </div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+            <Sparkles size={13} color="var(--neon-yellow)" />
+            <strong style={{ color: 'var(--neon-yellow)' }}>Key Syntax:</strong> {currentLevel.syntaxGuide}
+          </div>
+
+          {/* English Level 6 Spotlight Box */}
+          {currentLevel.englishSpotlight && (
+            <div
+              style={{
+                marginTop: '8px',
+                padding: '10px 14px',
+                background: 'rgba(139, 92, 246, 0.12)',
+                border: '1px solid rgba(139, 92, 246, 0.35)',
+                borderRadius: '4px',
+                fontSize: '0.8rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#c084fc', fontWeight: 700, fontSize: '0.75rem', fontFamily: 'var(--font-hud)' }}>
+                <BookOpen size={13} color="#c084fc" /> ENGLISH LEVEL 6 SPOTLIGHT
+              </div>
+              <div style={{ color: '#e2e8f0', fontSize: '0.78rem' }}>
+                <strong style={{ color: 'var(--neon-cyan)' }}>Target Vocabulary & Collocation:</strong> {currentLevel.englishSpotlight.vocab} — <em>"{currentLevel.englishSpotlight.collocation}"</em>
+              </div>
+              <div style={{ color: '#cbd5e1', fontSize: '0.75rem' }}>
+                <strong style={{ color: 'var(--neon-yellow)' }}>Grammar Focus:</strong> {currentLevel.englishSpotlight.grammarTip}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Code Editor Box with Line Numbers */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '16px',
+            fontFamily: 'var(--font-mono)',
+            background: 'rgba(4, 6, 11, 0.96)',
+            padding: '18px',
+            borderRadius: '4px',
+            border: isBeatBroken ? '1px solid #ff3366' : '1px solid rgba(255, 255, 255, 0.08)',
+            minHeight: '120px',
+            overflowX: 'auto',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-all',
+            boxShadow: isBeatBroken ? 'inset 0 0 15px rgba(255, 51, 102, 0.2)' : 'none',
+          }}
+        >
+          {/* Line Numbers */}
+          <div
+            style={{
+              userSelect: 'none',
+              color: 'var(--text-muted)',
+              textAlign: 'right',
+              paddingRight: '14px',
+              borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+              fontSize: '1.3rem',
+              lineHeight: '1.9',
+            }}
+          >
+            {targetCode.split('\n').map((_, i) => (
+              <div key={i}>{i + 1}</div>
+            ))}
+          </div>
+
+          {/* Code Content */}
+          <div style={{ flex: 1 }}>{renderCodeTokens()}</div>
+        </div>
+
+        {/* Live Compiler Execution Terminal */}
+        <div
+          style={{
+            marginTop: '14px',
+            background: 'rgba(2, 4, 8, 0.95)',
+            border: isLevelFinished ? '1px solid var(--neon-green)' : '1px solid rgba(0, 240, 255, 0.2)',
+            borderRadius: '4px',
+            padding: '14px 18px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.85rem',
+            boxShadow: isLevelFinished ? '0 0 20px rgba(0, 255, 163, 0.25)' : 'none',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '10px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              paddingBottom: '8px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.75rem', fontFamily: 'var(--font-hud)' }}>
+              <Play size={13} color={isLevelFinished ? 'var(--neon-green)' : 'var(--neon-cyan)'} />
+              TERMINAL // LIVE COMPILER OUTPUT
+            </div>
+            <div style={{ fontSize: '0.72rem', color: isLevelFinished ? 'var(--neon-green)' : 'var(--text-muted)' }}>
+              {isLevelFinished ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--neon-green)', fontWeight: 600 }}>
+                  <CheckCircle2 size={13} /> BUILD SUCCEEDED (0 ERRORS)
+                </span>
+              ) : (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Cpu size={13} /> WAITING FOR EXECUTION...
+                </span>
+              )}
+            </div>
+          </div>
+
+          {isLevelFinished ? (
+            <div>
+              {/* Command and Output */}
+              <div
+                style={{
+                  background: 'rgba(0, 0, 0, 0.65)',
+                  border: '1px solid rgba(0, 255, 163, 0.35)',
+                  borderRadius: '4px',
+                  padding: '12px 14px',
+                  marginBottom: '12px',
+                }}
+              >
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: 'var(--neon-cyan)' }}>$</span>
+                  <span>
+                    {currentLevel.language === 'python'
+                      ? 'python3 main.py'
+                      : currentLevel.language === 'javascript'
+                      ? 'node script.js'
+                      : 'gcc program.c -o prog && ./prog'}
+                  </span>
+                </div>
+                <div style={{ color: 'var(--neon-green)', fontSize: '1.05rem', fontWeight: 600, letterSpacing: '0.5px' }}>
+                  {currentLevel.expectedOutput}
+                </div>
+              </div>
+
+              {/* Educational Explanation Box */}
+              <div
+                style={{
+                  background: 'rgba(0, 240, 255, 0.05)',
+                  border: '1px solid rgba(0, 240, 255, 0.25)',
+                  borderRadius: '4px',
+                  padding: '10px 14px',
+                  marginBottom: '14px',
+                  fontSize: '0.82rem',
+                  lineHeight: '1.5',
+                  color: '#cbd5e1',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--neon-cyan)', fontWeight: 700, marginBottom: '4px', fontFamily: 'var(--font-hud)', fontSize: '0.75rem' }}>
+                  <Lightbulb size={14} color="var(--neon-cyan)" /> WHAT JUST HAPPENED IN YOUR CODE?
+                </div>
+                <div>{currentLevel.conceptTip}</div>
+              </div>
+
+              {/* Action Buttons */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '10px',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                }}
+              >
+                {hasNextLevel && onNextLevel && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onNextLevel();
+                    }}
+                    style={{
+                      background: 'rgba(0, 255, 163, 0.2)',
+                      border: '1px solid var(--neon-green)',
+                      color: 'var(--neon-green)',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      fontFamily: 'var(--font-hud)',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '0 0 12px rgba(0, 255, 163, 0.3)',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    NEXT LEVEL <ArrowRight size={14} />
+                  </button>
+                )}
+
+                {onOpenStats && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenStats();
+                    }}
+                    style={{
+                      background: 'rgba(0, 240, 255, 0.12)',
+                      border: '1px solid var(--neon-cyan)',
+                      color: 'var(--neon-cyan)',
+                      padding: '8px 14px',
+                      borderRadius: '4px',
+                      fontFamily: 'var(--font-hud)',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <BarChart2 size={14} /> VIEW BEAT STATS
+                  </button>
+                )}
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onResetLevel();
+                  }}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    color: 'var(--text-secondary)',
+                    padding: '8px 12px',
+                    borderRadius: '4px',
+                    fontFamily: 'var(--font-hud)',
+                    fontSize: '0.78rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <RefreshCw size={12} /> RETRY
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '6px 0' }}>
+              Type the code without breaking the beat to execute and compile live output here.
+            </div>
+          )}
+        </div>
+
+        {/* Footer Info */}
+        <div
+          style={{
+            marginTop: '10px',
+            fontSize: '0.75rem',
+            color: 'var(--text-muted)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '8px',
+          }}
+        >
+          <span>
+            💡 <strong style={{ color: 'var(--neon-cyan)' }}>Key Synthesizer:</strong> Every letter, symbol, and space triggers its own tuned acoustic pitch.
+          </span>
+          <span>
+            Progress: {Math.min(userInput.length, targetCode.length)} / {targetCode.length} ({progressPercent}%)
+          </span>
+        </div>
       </div>
     </div>
   );

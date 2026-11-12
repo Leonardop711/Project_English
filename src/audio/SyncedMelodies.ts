@@ -16,19 +16,19 @@ export interface SyncedMelody {
 
 export const NOTE_MAP: Record<string, number> = {
   // Octave 2 & 3
-  'C2': 65.41, 'D2': 73.42, 'Eb2': 77.78, 'E2': 82.41, 'F2': 87.31, 'G2': 98.00, 'A2': 110.00,
-  'C3': 130.81, 'D3': 146.83, 'Eb3': 155.56, 'E3': 164.81, 'F3': 174.61, 'G3': 196.00, 'Ab3': 207.65, 'A3': 220.00, 'Bb3': 233.08, 'B3': 246.94,
+  'C2': 65.41, 'D2': 73.42, 'Eb2': 77.78, 'E2': 82.41, 'F2': 87.31, 'G2': 98.00, 'A2': 110.00, 'Bb2': 116.54, 'B2': 123.47,
+  'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'Eb3': 155.56, 'E3': 164.81, 'F3': 174.61, 'F#3': 185.00, 'G3': 196.00, 'Ab3': 207.65, 'A3': 220.00, 'Bb3': 233.08, 'B3': 246.94,
   // Octave 4
   'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'Eb4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00, 'Ab4': 415.30, 'A4': 440.00, 'Bb4': 466.16, 'B4': 493.88,
   // Octave 5
   'C5': 523.25, 'C#5': 554.37, 'D5': 587.33, 'Eb5': 622.25, 'E5': 659.25, 'F5': 698.46, 'F#5': 739.99, 'G5': 783.99, 'Ab5': 830.61, 'A5': 880.00, 'Bb5': 932.33, 'B5': 987.77,
   // Octave 6
-  'C6': 1046.50, 'D6': 1174.66, 'E6': 1318.51, 'F6': 1396.91, 'G6': 1567.98, 'A6': 1760.00,
+  'C6': 1046.50, 'D6': 1174.66, 'Eb6': 1244.51, 'E6': 1318.51, 'F6': 1396.91, 'G6': 1567.98, 'A6': 1760.00,
 };
 
-// 1. Skrillex - Bangarang (Iconic 8-Bit Dubstep / Chiptune Riff & Drop)
+// 1. Skrillex - Bangarang (Iconic Electronic Dubstep Drop & Riff)
 const BANGARANG_NOTES: SyncedNote[] = [
-  // Intro Riff 1
+  // Intro Lead Riff 1
   { note: 'D4', freq: NOTE_MAP['D4'], type: 'lead' },
   { note: 'D4', freq: NOTE_MAP['D4'], type: 'lead' },
   { note: 'F4', freq: NOTE_MAP['F4'], type: 'lead' },
@@ -38,7 +38,7 @@ const BANGARANG_NOTES: SyncedNote[] = [
   { note: 'F4', freq: NOTE_MAP['F4'], type: 'lead' },
   { note: 'D4', freq: NOTE_MAP['D4'], type: 'lead' },
 
-  // Intro Riff 2
+  // Intro Lead Riff 2
   { note: 'D4', freq: NOTE_MAP['D4'], type: 'lead' },
   { note: 'D4', freq: NOTE_MAP['D4'], type: 'lead' },
   { note: 'F4', freq: NOTE_MAP['F4'], type: 'lead' },
@@ -48,14 +48,14 @@ const BANGARANG_NOTES: SyncedNote[] = [
   { note: 'Ab4', freq: NOTE_MAP['Ab4'], type: 'lead' },
   { note: 'F4', freq: NOTE_MAP['F4'], type: 'lead' },
 
-  // Vocal Stutter Build: "Ba-ba-ba-bangarang!"
+  // Build: "Ba-ba-ba-bangarang!"
   { note: 'D4', freq: NOTE_MAP['D4'], type: 'stutter', label: 'BA-' },
   { note: 'D4', freq: NOTE_MAP['D4'], type: 'stutter', label: 'BA-' },
   { note: 'D4', freq: NOTE_MAP['D4'], type: 'stutter', label: 'BAN-' },
   { note: 'F4', freq: NOTE_MAP['F4'], type: 'stutter', label: 'GA-' },
   { note: 'D5', freq: NOTE_MAP['D5'], type: 'lead', label: 'RANG!' },
 
-  // THE 8-BIT DROP: Heavy Dubstep Growl + Square Lead Attack
+  // THE DUBSTEP DROP: Heavy Analog Growl + Pluck Attack
   { note: 'D3', freq: NOTE_MAP['D3'], type: 'growl', label: 'WUB' },
   { note: 'D4', freq: NOTE_MAP['D4'], type: 'lead' },
   { note: 'F4', freq: NOTE_MAP['F4'], type: 'lead' },
@@ -81,7 +81,31 @@ const BANGARANG_NOTES: SyncedNote[] = [
   { note: 'D5', freq: NOTE_MAP['D5'], type: 'lead', label: 'BANGARANG!' },
 ];
 
-// 2. Daft Punk - Harder, Better, Faster, Stronger (8-Bit Electro Funk)
+// 2. The Weeknd - Blinding Lights (Ultimate Synthwave Anthem)
+const BLINDING_LIGHTS_NOTES: SyncedNote[] = [
+  { note: 'F4', freq: NOTE_MAP['F4'], type: 'lead' },
+  { note: 'F4', freq: NOTE_MAP['F4'], type: 'lead' },
+  { note: 'Eb4', freq: NOTE_MAP['Eb4'], type: 'lead' },
+  { note: 'F4', freq: NOTE_MAP['F4'], type: 'lead' },
+  { note: 'G4', freq: NOTE_MAP['G4'], type: 'lead' },
+  { note: 'Eb4', freq: NOTE_MAP['Eb4'], type: 'lead' },
+  { note: 'C4', freq: NOTE_MAP['C4'], type: 'lead' },
+  { note: 'C4', freq: NOTE_MAP['C4'], type: 'lead' },
+  { note: 'Eb4', freq: NOTE_MAP['Eb4'], type: 'lead' },
+  { note: 'Eb4', freq: NOTE_MAP['Eb4'], type: 'lead' },
+  { note: 'F4', freq: NOTE_MAP['F4'], type: 'lead' },
+  { note: 'F4', freq: NOTE_MAP['F4'], type: 'lead' },
+  { note: 'Eb4', freq: NOTE_MAP['Eb4'], type: 'lead' },
+  { note: 'F4', freq: NOTE_MAP['F4'], type: 'lead' },
+  { note: 'G4', freq: NOTE_MAP['G4'], type: 'lead' },
+  { note: 'Bb4', freq: NOTE_MAP['Bb4'], type: 'lead', label: 'NIGHTS' },
+  { note: 'G4', freq: NOTE_MAP['G4'], type: 'lead' },
+  { note: 'F4', freq: NOTE_MAP['F4'], type: 'lead' },
+  { note: 'Eb4', freq: NOTE_MAP['Eb4'], type: 'lead' },
+  { note: 'C4', freq: NOTE_MAP['C4'], type: 'sub' },
+];
+
+// 3. Daft Punk - Harder, Better, Faster, Stronger (Electro Funk)
 const DAFT_PUNK_NOTES: SyncedNote[] = [
   { note: 'F#4', freq: NOTE_MAP['F#4'], type: 'lead', label: 'Work it' },
   { note: 'F#4', freq: NOTE_MAP['F#4'], type: 'lead', label: 'Make it' },
@@ -98,7 +122,7 @@ const DAFT_PUNK_NOTES: SyncedNote[] = [
   { note: 'F#4', freq: NOTE_MAP['F#4'], type: 'sub' },
 ];
 
-// 3. Darude - Sandstorm (8-Bit Retro Trance)
+// 4. Darude - Sandstorm (Dance Electronic Legend)
 const SANDSTORM_NOTES: SyncedNote[] = [
   { note: 'B4', freq: NOTE_MAP['B4'], type: 'lead' },
   { note: 'B4', freq: NOTE_MAP['B4'], type: 'lead' },
@@ -123,15 +147,23 @@ const SANDSTORM_NOTES: SyncedNote[] = [
 export const SYNCED_MELODIES: SyncedMelody[] = [
   {
     id: 'bangarang',
-    name: 'BANGARANG (8-BIT)',
+    name: 'BANGARANG',
     artist: 'SKRILLEX',
     bpm: 110,
-    description: 'El legendario riff y drop dubstep de Skrillex recreado nota por nota en chip 8-bit.',
+    description: 'El legendario riff y drop dubstep de Skrillex con bajo growl y plucks estéreo.',
     notes: BANGARANG_NOTES,
   },
   {
+    id: 'blinding-lights',
+    name: 'BLINDING LIGHTS',
+    artist: 'THE WEEKND',
+    bpm: 171,
+    description: 'El icónico riff de synthwave retro-moderno de los 80s, enérgico y ultra melódico.',
+    notes: BLINDING_LIGHTS_NOTES,
+  },
+  {
     id: 'daft-punk',
-    name: 'HARDER, BETTER, FASTER (8-BIT)',
+    name: 'HARDER, BETTER, FASTER',
     artist: 'DAFT PUNK',
     bpm: 124,
     description: 'Electro funk robótico sincronizado a cada pulsación de tu código.',
@@ -139,10 +171,10 @@ export const SYNCED_MELODIES: SyncedMelody[] = [
   },
   {
     id: 'sandstorm',
-    name: 'SANDSTORM (8-BIT)',
+    name: 'SANDSTORM',
     artist: 'DARUDE',
     bpm: 136,
-    description: 'Arpegio trance arcade a máxima velocidad para tecleo continuo.',
+    description: 'Arpegio trance de alta velocidad para escribir código a máximo ritmo.',
     notes: SANDSTORM_NOTES,
   },
 ];

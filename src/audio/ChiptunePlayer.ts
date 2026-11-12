@@ -1,6 +1,7 @@
 import { ChiptuneTrack, CHIPTUNE_TRACKS, NOTE_FREQS } from './ChiptuneTracks';
 
 export type BeatStatusCallback = (isBroken: boolean) => void;
+export type SoundProfile = 'synthwave' | 'piano' | 'edm' | 'chiptune';
 
 export class ChiptunePlayer {
   private ctx: AudioContext | null = null;
@@ -12,6 +13,7 @@ export class ChiptunePlayer {
   private isMuted: boolean = false;
   private volume: number = 0.30; // Default balanced BGM volume so key typing sounds cut through clearly
   private isBeatCut: boolean = false;
+  private soundProfile: SoundProfile = 'synthwave'; // Default: Modern Hi-Fi Synthwave
 
   private currentStep: number = 0;
   private nextStepTime: number = 0;
@@ -28,6 +30,7 @@ export class ChiptunePlayer {
 
   // Listeners for UI sync
   private beatStatusListeners: Set<BeatStatusCallback> = new Set();
+  private beatListeners: Array<(beatIndex: number, bpm: number) => void> = [];
 
   // Noise buffer for drums & percussions
   private noiseBuffer: AudioBuffer | null = null;
@@ -62,6 +65,24 @@ export class ChiptunePlayer {
     this.beatStatusListeners.add(cb);
     cb(this.isBeatCut);
     return () => this.beatStatusListeners.delete(cb);
+  }
+
+  /**
+   * Subscribe to quarter-note pulses (0, 1, 2, 3) for the visual metronome.
+   */
+  public subscribeBeat(listener: (beatIndex: number, bpm: number) => void): () => void {
+    this.beatListeners.push(listener);
+    return () => {
+      this.beatListeners = this.beatListeners.filter((l) => l !== listener);
+    };
+  }
+
+  public setSoundProfile(profile: SoundProfile) {
+    this.soundProfile = profile;
+  }
+
+  public getSoundProfile(): SoundProfile {
+    return this.soundProfile;
   }
 
   private notifyBeatStatus() {
@@ -332,6 +353,17 @@ export class ChiptunePlayer {
     const secondsPerBeat = 60.0 / track.bpm;
     const stepDuration = secondsPerBeat / 4;
 
+    // Visual metronome pulse on quarter notes (steps 0, 4, 8, 12...)
+    if (step % 4 === 0 && this.beatListeners.length > 0) {
+      const beatNum = Math.floor(step / 4) % 4;
+      const delayMs = Math.max(0, (time - this.ctx.currentTime) * 1000);
+      window.setTimeout(() => {
+        if (this.isPlaying && !this.isBeatCut) {
+          this.beatListeners.forEach((l) => l(beatNum, track.bpm));
+        }
+      }, delayMs);
+    }
+
     // 1. Channel 4: Percussion & Drums (Güiro, Cowbell, Congas, Kick, Snare, Hihat)
     const drumToken = track.drums[step % track.drums.length];
     if (drumToken && drumToken !== '-') {
@@ -445,18 +477,46 @@ export class ChiptunePlayer {
       return;
     }
 
-    // Default square lead
+    // Default lead: profile-aware timbre (synthwave / piano / edm / chiptune)
     const osc = this.ctx.createOscillator();
-    osc.type = 'square';
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+
+    let leadVol = this.combo >= 20 ? 0.22 : 0.16;
+
+    switch (this.soundProfile) {
+      case 'chiptune':
+        osc.type = 'square';
+        filter.frequency.setValueAtTime(6000, time);
+        break;
+      case 'piano':
+        osc.type = 'sine';
+        filter.frequency.setValueAtTime(3200, time);
+        leadVol *= 1.15;
+        break;
+      case 'edm':
+        osc.type = 'sawtooth';
+        filter.frequency.setValueAtTime(4500, time);
+        filter.frequency.exponentialRampToValueAtTime(1200, time + duration);
+        filter.Q.setValueAtTime(4, time);
+        break;
+      default:
+        osc.type = 'sawtooth';
+        filter.frequency.setValueAtTime(2800, time);
+        filter.frequency.exponentialRampToValueAtTime(1000, time + duration);
+        filter.Q.setValueAtTime(2.5, time);
+        break;
+    }
+
     osc.frequency.setValueAtTime(freq, time);
 
     const gain = this.ctx.createGain();
-    const leadVol = this.combo >= 20 ? 0.22 : 0.16;
     gain.gain.setValueAtTime(leadVol, time);
     gain.gain.setValueAtTime(leadVol, time + duration * 0.7);
     gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
 
-    osc.connect(gain);
+    osc.connect(filter);
+    filter.connect(gain);
     gain.connect(this.bgmGain);
 
     osc.start(time);
@@ -469,7 +529,18 @@ export class ChiptunePlayer {
     if (!freq) return;
 
     const osc = this.ctx.createOscillator();
-    osc.type = this.currentTrack.genre === 'lofi' ? 'sine' : 'square';
+    const profileWave: Record<SoundProfile, OscillatorType> = {
+      synthwave: 'sawtooth',
+      piano: 'sine',
+      edm: 'sawtooth',
+      chiptune: 'square',
+    };
+    const isProfileTrack = this.currentTrack.genre === 'synthwave' || this.currentTrack.genre === 'chiptune';
+    osc.type = this.currentTrack.genre === 'lofi'
+      ? 'sine'
+      : isProfileTrack
+        ? profileWave[this.soundProfile]
+        : 'square';
     osc.frequency.setValueAtTime(freq, time);
 
     const gain = this.ctx.createGain();
@@ -551,58 +622,93 @@ export class ChiptunePlayer {
       return;
     }
 
-    // Default bass
-    const osc = this.ctx.createOscillator();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(freq, time);
-
-    const gain = this.ctx.createGain();
-    const bassVol = 0.28;
-    gain.gain.setValueAtTime(bassVol, time);
-    gain.gain.setValueAtTime(bassVol, time + duration * 0.8);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
-
-    osc.connect(gain);
-    gain.connect(this.bgmGain);
-
-    osc.start(time);
-    osc.stop(time + duration);
-  }
-
-  private playDrum(token: string, time: number) {
-    if (!this.ctx || !this.bgmGain) return;
-
-    if (token === 'K') {
-      // Kick drum
+    // Default bass: profile-aware (warm Moog for synthwave, FM-ish sine for piano, punchy EDM, triangle 8-bit)
+    if (this.soundProfile === 'chiptune') {
       const osc = this.ctx.createOscillator();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(140, time);
-      osc.frequency.exponentialRampToValueAtTime(35, time + 0.08);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, time);
 
       const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(0.38, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.09);
+      const bassVol = 0.28;
+      gain.gain.setValueAtTime(bassVol, time);
+      gain.gain.setValueAtTime(bassVol, time + duration * 0.8);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
 
       osc.connect(gain);
       gain.connect(this.bgmGain);
 
       osc.start(time);
-      osc.stop(time + 0.1);
+      osc.stop(time + duration);
+      return;
+    }
+
+    const osc = this.ctx.createOscillator();
+    osc.type = this.soundProfile === 'piano' ? 'sine' : 'sawtooth';
+    osc.frequency.setValueAtTime(freq, time);
+
+    const subOsc = this.ctx.createOscillator();
+    subOsc.type = 'sine';
+    subOsc.frequency.setValueAtTime(freq * 0.5, time);
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(this.soundProfile === 'edm' ? 620 : 450, time);
+    filter.Q.setValueAtTime(this.soundProfile === 'edm' ? 1.5 : 3, time);
+
+    const gain = this.ctx.createGain();
+    const bassVol = this.soundProfile === 'edm' ? 0.3 : 0.24;
+    gain.gain.setValueAtTime(bassVol, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+    osc.connect(filter);
+    subOsc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.bgmGain);
+
+    osc.start(time);
+    subOsc.start(time);
+    osc.stop(time + duration);
+    subOsc.stop(time + duration);
+  }
+
+  private playDrum(token: string, time: number) {
+    if (!this.ctx || !this.bgmGain) return;
+
+    const isHiFi = this.soundProfile !== 'chiptune';
+
+    if (token === 'K') {
+      // Kick drum (punchy sine in Hi-Fi, square 8-bit in Arcade mode)
+      const osc = this.ctx.createOscillator();
+      osc.type = isHiFi ? 'sine' : 'square';
+      osc.frequency.setValueAtTime(isHiFi ? 150 : 140, time);
+      osc.frequency.exponentialRampToValueAtTime(isHiFi ? 42 : 35, time + 0.08);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(isHiFi ? 0.42 : 0.38, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + (isHiFi ? 0.12 : 0.09));
+
+      osc.connect(gain);
+      gain.connect(this.bgmGain);
+
+      osc.start(time);
+      osc.stop(time + (isHiFi ? 0.13 : 0.1));
     } else if (token === 'S') {
       // Snare drum
       if (!this.noiseBuffer) return;
+
+      const isPunchy = this.currentTrack.genre === 'dubstep' || isHiFi;
 
       const noiseSource = this.ctx.createBufferSource();
       noiseSource.buffer = this.noiseBuffer;
 
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(this.currentTrack.genre === 'dubstep' ? 1800 : 1400, time);
-      filter.Q.setValueAtTime(this.currentTrack.genre === 'dubstep' ? 4 : 3, time);
+      filter.frequency.setValueAtTime(isPunchy ? 1800 : 1400, time);
+      filter.Q.setValueAtTime(isPunchy ? 4 : 3, time);
 
       const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(this.currentTrack.genre === 'dubstep' ? 0.38 : 0.28, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + (this.currentTrack.genre === 'dubstep' ? 0.16 : 0.12));
+      gain.gain.setValueAtTime(isPunchy ? 0.38 : 0.28, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + (isPunchy ? 0.16 : 0.12));
 
       noiseSource.connect(filter);
       filter.connect(gain);
@@ -610,6 +716,24 @@ export class ChiptunePlayer {
 
       noiseSource.start(time);
       noiseSource.stop(time + 0.18);
+
+      // Hi-Fi body snap tone
+      if (isHiFi && this.currentTrack.genre !== 'dubstep') {
+        const bodyOsc = this.ctx.createOscillator();
+        bodyOsc.type = 'triangle';
+        bodyOsc.frequency.setValueAtTime(190, time);
+        bodyOsc.frequency.exponentialRampToValueAtTime(80, time + 0.06);
+
+        const bodyGain = this.ctx.createGain();
+        bodyGain.gain.setValueAtTime(0.2, time);
+        bodyGain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+
+        bodyOsc.connect(bodyGain);
+        bodyGain.connect(this.bgmGain);
+
+        bodyOsc.start(time);
+        bodyOsc.stop(time + 0.09);
+      }
     } else if (token === 'H') {
       // Closed Hi-hat
       if (!this.noiseBuffer) return;
@@ -619,10 +743,10 @@ export class ChiptunePlayer {
 
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'highpass';
-      filter.frequency.setValueAtTime(7500, time);
+      filter.frequency.setValueAtTime(isHiFi ? 8200 : 7500, time);
 
       const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(0.12, time);
+      gain.gain.setValueAtTime(isHiFi ? 0.12 : 0.1, time);
       gain.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
 
       noiseSource.connect(filter);
